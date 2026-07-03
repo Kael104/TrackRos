@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-function FoodIcon() {
+function FoodIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -13,7 +13,7 @@ function FoodIcon() {
       strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-5 w-5"
+      className={className}
       aria-hidden="true"
     >
       <path d="M6 3v6" />
@@ -26,11 +26,37 @@ function FoodIcon() {
   );
 }
 
-const FAB_GAP = 24;
+/** Gap kept between the button and the footer while it is scrolling into view. */
+const FAB_FOOTER_GAP = 16;
+
+function getRestBottom(): number {
+  const width = window.innerWidth;
+
+  if (width >= 1024) {
+    return 12;
+  }
+
+  if (width >= 640) {
+    return 14;
+  }
+
+  return 16;
+}
+
+function getFabBottomOffset(footer: HTMLElement): number {
+  const footerTop = footer.getBoundingClientRect().top;
+  const footerVisibleHeight = Math.max(0, window.innerHeight - footerTop);
+
+  if (footerVisibleHeight <= 0) {
+    return getRestBottom();
+  }
+
+  return footerVisibleHeight + FAB_FOOTER_GAP;
+}
 
 export function AddFoodFab() {
   const pathname = usePathname();
-  const [bottomOffset, setBottomOffset] = useState(FAB_GAP);
+  const [bottomOffset, setBottomOffset] = useState(16);
 
   useEffect(() => {
     const footer = document.querySelector("footer");
@@ -38,18 +64,26 @@ export function AddFoodFab() {
       return;
     }
 
+    let frame = 0;
+
     function updateBottomOffset() {
-      setBottomOffset(footer!.offsetHeight + FAB_GAP);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        setBottomOffset(getFabBottomOffset(footer as HTMLElement));
+      });
     }
 
     updateBottomOffset();
 
-    const observer = new ResizeObserver(updateBottomOffset);
-    observer.observe(footer);
+    const resizeObserver = new ResizeObserver(updateBottomOffset);
+    resizeObserver.observe(footer);
+    window.addEventListener("scroll", updateBottomOffset, { passive: true });
     window.addEventListener("resize", updateBottomOffset);
 
     return () => {
-      observer.disconnect();
+      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      window.removeEventListener("scroll", updateBottomOffset);
       window.removeEventListener("resize", updateBottomOffset);
     };
   }, []);
@@ -62,10 +96,12 @@ export function AddFoodFab() {
     <Link
       href="/log"
       aria-label="Add food"
-      style={{ bottom: bottomOffset }}
-      className="fixed right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-brand text-white shadow-elevated transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      style={{
+        bottom: `calc(${bottomOffset}px + env(safe-area-inset-bottom, 0px))`,
+      }}
+      className="fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-white shadow-elevated transition-transform duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:right-6 sm:h-12 sm:w-12 lg:h-11 lg:w-11"
     >
-      <FoodIcon />
+      <FoodIcon className="h-6 w-6 sm:h-5 sm:w-5" />
     </Link>
   );
 }
