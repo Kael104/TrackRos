@@ -65,7 +65,7 @@ export default function DashboardPage() {
             <RemainingCalories macros={macros} />
           </div>
 
-          <TodaysMeals meals={meals} />
+          <TodaysMeals meals={meals} editableNames />
         </div>
       )}
     </PageContainer>

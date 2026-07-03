@@ -10,17 +10,20 @@ import {
   type MealType,
 } from "@/lib/meals";
 import type {
+  BuiltMealItemInput,
   MealPreset,
   MealPresetItemInput,
   RecentFoodItem,
 } from "@/lib/presets-types";
 import type { ScaledNutrients } from "@/lib/scale-nutrients";
 import {
+  updateLogEntryDisplayName,
   addLogEntry,
   addPresetToLog,
   buildFoodSearchResponse,
   createMealPreset,
   createMealPresetFromDay,
+  createBuiltMeal,
   deleteCachedFood,
   deleteDayLog,
   deleteMealPreset,
@@ -59,6 +62,11 @@ interface DashboardStore {
     mealType: MealType,
     items: MealPresetItemInput[],
   ) => Promise<void>;
+  saveBuiltMeal: (
+    name: string,
+    mealType: MealType,
+    items: BuiltMealItemInput[],
+  ) => Promise<void>;
   savePresetFromDay: (
     name: string,
     date: string,
@@ -66,6 +74,11 @@ interface DashboardStore {
   ) => Promise<void>;
   deletePreset: (id: number) => Promise<void>;
   removeCachedFood: (foodId: number) => Promise<void>;
+  renameLogEntry: (
+    entryId: string,
+    mealType: MealType,
+    displayName: string,
+  ) => Promise<void>;
   resetDay: () => Promise<void>;
 }
 
@@ -306,6 +319,22 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     }
   },
 
+  saveBuiltMeal: async (name, mealType, items) => {
+    set({ error: null });
+
+    try {
+      const preset = await createBuiltMeal(name, mealType, items);
+      set((state) => ({
+        presets: [preset, ...state.presets.filter((p) => p.id !== preset.id)],
+      }));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to save meal";
+      set({ error: message });
+      throw error;
+    }
+  },
+
   savePresetFromDay: async (name, date, mealType) => {
     set({ error: null });
 
@@ -353,6 +382,29 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to remove cached food";
+      set({ error: message });
+      throw error;
+    }
+  },
+
+  renameLogEntry: async (entryId, mealType, displayName) => {
+    set({ error: null });
+
+    try {
+      await updateLogEntryDisplayName(Number(entryId), displayName);
+      const trimmed = displayName.trim();
+
+      set((state) => ({
+        meals: {
+          ...state.meals,
+          [mealType]: state.meals[mealType].map((entry) =>
+            entry.id === entryId ? { ...entry, foodName: trimmed } : entry,
+          ),
+        },
+      }));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to rename food";
       set({ error: message });
       throw error;
     }

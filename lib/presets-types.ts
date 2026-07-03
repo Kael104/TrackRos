@@ -1,7 +1,5 @@
 import type { FoodRecord } from "@/lib/food-search-types";
 import type { MealType } from "@/lib/meals";
-
-/** Minimum log count to show the "frequent" badge. */
 export const FREQUENT_FOOD_THRESHOLD = 3;
 
 export interface RecentFoodItem {
@@ -33,3 +31,12 @@ export interface MealPresetItemInput {
   servings: number;
   servingLabel: string;
 }
+
+/** Item in the meal builder before persistence (food may have id 0). */
+export interface BuiltMealItemInput {
+  food: FoodRecord;
+  quantity: number;
+  unit: string | null;
+}
+
+/** Minimum log count to show the "frequent" badge. */

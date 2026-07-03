@@ -9,9 +9,14 @@ import {
 interface MealSectionProps {
   type: MealType;
   entries: LogEntry[];
+  editableNames?: boolean;
 }
 
-export function MealSection({ type, entries }: MealSectionProps) {
+export function MealSection({
+  type,
+  entries,
+  editableNames = false,
+}: MealSectionProps) {
   const config = MEAL_CONFIG[type];
   const calories = sumMealCalories(entries);
   const isEmpty = entries.length === 0;
@@ -42,7 +47,12 @@ export function MealSection({ type, entries }: MealSectionProps) {
       ) : (
         <ul className="divide-y divide-border-subtle px-4">
           {entries.map((entry) => (
-            <LogEntryItem key={entry.id} entry={entry} />
+            <LogEntryItem
+              key={entry.id}
+              entry={entry}
+              mealType={type}
+              editable={editableNames}
+            />
           ))}
         </ul>
       )}

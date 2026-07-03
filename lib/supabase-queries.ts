@@ -22,6 +22,7 @@ import {
   type MealType,
 } from "@/lib/meals";
 import type {
+  BuiltMealItemInput,
   MealPreset,
   MealPresetItem,
   MealPresetItemInput,
@@ -188,6 +189,7 @@ function aggregateEntriesIntoDayData(
       food,
       raw.servings,
       raw.serving_label,
+      raw.display_name,
     );
 
     dayData = {
@@ -207,6 +209,7 @@ function buildLogEntry(
   food: FoodRow,
   servings: number,
   servingLabel: string | null,
+  displayName?: string | null,
 ): LogEntry {
   const scaled = scaleNutrients(
     foodRowToNutrientRecord(food),
@@ -216,7 +219,7 @@ function buildLogEntry(
 
   return {
     id: String(entryId),
-    foodName: food.name,
+    foodName: displayName?.trim() || food.name,
     servings,
     servingLabel: servingLabel ?? food.serving_unit,
     calories: Math.round(scaled.calories),
@@ -465,6 +468,7 @@ type LogEntryWithFood = {
   meal_type: MealType;
   servings: number;
   serving_label: string | null;
+  display_name: string | null;
   created_at: string;
   foods: FoodRow;
 };
@@ -692,6 +696,25 @@ export async function deleteLogEntry(entryId: number): Promise<void> {
   }
 }
 
+export async function updateLogEntryDisplayName(
+  entryId: number,
+  displayName: string,
+): Promise<void> {
+  const trimmed = displayName.trim();
+  if (!trimmed) {
+    throw new Error("Food name cannot be empty");
+  }
+
+  const { error } = await supabase
+    .from("log_entries")
+    .update({ display_name: trimmed })
+    .eq("id", entryId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function deleteDayLog(logDate: string): Promise<void> {
   const { error } = await supabase
     .from("daily_logs")
@@ -727,6 +750,85 @@ export function buildFoodSearchResponse(
   unit: string | null,
 ): FoodSearchResponse {
   return buildFinalizedSearchResponse(food, quantity, unit, true);
+}
+
+function uniqueManualFoodName(baseName: string): Promise<string> {
+  return resolveUniqueFoodName(baseName.toLowerCase().trim(), baseName);
+}
+
+async function resolveUniqueFoodName(
+  normalizedName: string,
+  displayName: string,
+): Promise<string> {
+  const existing = await findFoodByName(normalizedName);
+  if (!existing) {
+    return normalizedName;
+  }
+
+  for (let attempt = 1; attempt <= 99; attempt++) {
+    const candidate = `${normalizedName} (manual ${attempt})`;
+    const taken = await findFoodByName(candidate);
+    if (!taken) {
+      return candidate;
+    }
+  }
+
+  throw new Error(`Could not find a unique name for "${displayName}".`);
+}
+
+export async function createManualFood(
+  name: string,
+  nutrients: FoodNutrients,
+): Promise<FoodRecord> {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    throw new Error("Food name is required.");
+  }
+
+  const uniqueName = await uniqueManualFoodName(trimmed);
+  const row = await insertFood(uniqueName, nutrients, "manual");
+  return foodRowToRecord(row);
+}
+
+export async function persistFoodRecord(record: FoodRecord): Promise<FoodRecord> {
+  if (record.id > 0) {
+    return record;
+  }
+
+  if (record.source === "manual") {
+    return createManualFood(record.name, foodRecordToNutrients(record));
+  }
+
+  const normalizedName = record.name.toLowerCase().trim();
+  const { food } = await findOrCreateFood(
+    normalizedName,
+    record.name,
+    foodRecordToNutrients(record),
+  );
+  return foodRowToRecord(food);
+}
+
+export async function createBuiltMeal(
+  name: string,
+  mealType: MealType,
+  items: BuiltMealItemInput[],
+): Promise<MealPreset> {
+  if (!items.length) {
+    throw new Error("A meal must include at least one item.");
+  }
+
+  const presetItems: MealPresetItemInput[] = [];
+
+  for (const item of items) {
+    const persisted = await persistFoodRecord(item.food);
+    presetItems.push({
+      foodId: persisted.id,
+      servings: item.quantity,
+      servingLabel: item.unit ?? item.food.servingUnit,
+    });
+  }
+
+  return createMealPreset(name, mealType, presetItems);
 }
 
 type RecentLogEntryRow = {

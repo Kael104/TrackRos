@@ -101,6 +101,7 @@ export type Database = {
           meal_type: "breakfast" | "lunch" | "dinner" | "snacks";
           servings: number;
           serving_label: string | null;
+          display_name: string | null;
           created_at: string;
         };
         Insert: {
@@ -110,6 +111,7 @@ export type Database = {
           meal_type: "breakfast" | "lunch" | "dinner" | "snacks";
           servings?: number;
           serving_label?: string | null;
+          display_name?: string | null;
           created_at?: string;
         };
         Update: {
@@ -119,6 +121,7 @@ export type Database = {
           meal_type?: "breakfast" | "lunch" | "dinner" | "snacks";
           servings?: number;
           serving_label?: string | null;
+          display_name?: string | null;
           created_at?: string;
         };
         Relationships: [

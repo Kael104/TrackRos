@@ -11,9 +11,10 @@ import {
 
 interface TodaysMealsProps {
   meals: DailyMealLog;
+  editableNames?: boolean;
 }
 
-export function TodaysMeals({ meals }: TodaysMealsProps) {
+export function TodaysMeals({ meals, editableNames = false }: TodaysMealsProps) {
   const totalEntries = countMealEntries(meals);
   const totalCalories = sumDailyCalories(meals);
 
@@ -46,7 +47,12 @@ export function TodaysMeals({ meals }: TodaysMealsProps) {
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {(Object.keys(MEAL_CONFIG) as MealType[]).map((type) => (
-          <MealSection key={type} type={type} entries={meals[type]} />
+          <MealSection
+            key={type}
+            type={type}
+            entries={meals[type]}
+            editableNames={editableNames}
+          />
         ))}
       </div>
 
