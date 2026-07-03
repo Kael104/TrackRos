@@ -48,7 +48,7 @@ export function DayCell({
           hasData={hasData}
         />
       ) : (
-        <div className="h-14 w-14 rounded-full bg-neutral-100/80" aria-hidden />
+        <div className="h-9 w-9 rounded-full bg-neutral-100/80 sm:h-14 sm:w-14" aria-hidden />
       )}
     </>
   );
@@ -56,7 +56,7 @@ export function DayCell({
   if (!isInteractive) {
     return (
       <div
-        className={`flex flex-col items-center gap-1 rounded-lg px-1 py-2 ${
+        className={`flex flex-col items-center gap-1 rounded-lg px-0 py-1.5 sm:px-1 sm:py-2 ${
           isCurrentMonth ? "" : "opacity-40"
         }`}
         aria-hidden={!isCurrentMonth}
@@ -72,7 +72,7 @@ export function DayCell({
       onClick={() => onSelect(iso)}
       aria-label={`View nutrition for day ${dayOfMonth}`}
       aria-pressed={isSelected}
-      className={`flex flex-col items-center gap-1 rounded-lg px-1 py-2 transition-colors ${
+      className={`flex flex-col items-center gap-1 rounded-lg px-0 py-1.5 transition-colors sm:px-1 sm:py-2 ${
         isSelected
           ? "bg-primary-subtle ring-2 ring-primary/30"
           : "hover:bg-neutral-100"

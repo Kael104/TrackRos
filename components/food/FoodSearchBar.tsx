@@ -105,7 +105,7 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
         <label htmlFor="food-search" className="sr-only">
           Search food
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
             id="food-search"
             type="text"
@@ -116,11 +116,11 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
           />
 
           {onAddToDashboard && (
-            <div className="relative flex shrink-0 items-stretch" ref={dropdownRef}>
+            <div className="relative flex w-full shrink-0 items-stretch sm:w-auto" ref={dropdownRef}>
               <button
                 onClick={handleAdd}
                 disabled={!hasResult}
-                className={`rounded-l-xl border border-r-0 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`flex-1 rounded-l-xl border border-r-0 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none ${
                   added
                     ? "border-green-300 bg-green-50 text-green-700"
                     : "border-border bg-primary text-white hover:bg-primary/90"
@@ -132,7 +132,7 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
                 onClick={() => setMealOpen((o) => !o)}
                 disabled={!hasResult}
                 aria-label="Select meal"
-                className={`rounded-r-xl border px-3 py-3 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`flex-1 rounded-r-xl border px-3 py-3 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none ${
                   added
                     ? "border-green-300 bg-green-50 text-green-700"
                     : "border-border bg-primary text-white hover:bg-primary/90"

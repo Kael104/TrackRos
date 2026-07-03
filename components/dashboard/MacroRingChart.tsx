@@ -68,7 +68,7 @@ export function MacroRingChart({ macros, dateLabel, dateIso }: MacroRingChartPro
   return (
     <section
       id="macro-rings"
-      className="relative overflow-hidden rounded-xl border border-border bg-surface p-8 shadow-card lg:col-span-2"
+      className="relative overflow-hidden rounded-xl border border-border bg-surface p-5 shadow-card sm:p-8 lg:col-span-2"
     >
       <div
         className="absolute inset-x-0 top-0 h-1 bg-gradient-accent opacity-80"
@@ -94,7 +94,7 @@ export function MacroRingChart({ macros, dateLabel, dateIso }: MacroRingChartPro
         )}
       </div>
 
-      <div className="mx-auto mt-8 grid max-w-md grid-cols-2 place-items-center gap-6">
+      <div className="mx-auto mt-8 grid max-w-md grid-cols-2 place-items-center gap-4 sm:gap-6">
         {(Object.keys(MACRO_CONFIG) as Array<keyof typeof MACRO_CONFIG>).map(
           (key) => {
             const config = MACRO_CONFIG[key];

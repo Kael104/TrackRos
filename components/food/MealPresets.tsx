@@ -205,7 +205,7 @@ export function MealPresets({
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
                     <MealTypeDropdown
                       value={mealType}
                       onChange={(meal) =>

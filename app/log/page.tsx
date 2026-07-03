@@ -45,7 +45,7 @@ export default function LogPage() {
       )}
 
       <div className="space-y-4">
-        <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
+        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
           <FoodSearchBar onAddToDashboard={addFood} />
         </div>
 

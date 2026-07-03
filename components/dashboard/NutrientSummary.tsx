@@ -25,7 +25,7 @@ export function NutrientSummary({ nutrients }: NutrientSummaryProps) {
   return (
     <section
       id="nutrient-cards"
-      className="relative h-full overflow-hidden rounded-xl border border-border bg-surface p-8 shadow-card"
+      className="relative h-full overflow-hidden rounded-xl border border-border bg-surface p-5 shadow-card sm:p-8"
     >
       <div
         className="absolute inset-x-0 top-0 h-1 bg-gradient-accent opacity-80"

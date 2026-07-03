@@ -21,7 +21,7 @@ export function TodaysMeals({ meals, editableNames = false }: TodaysMealsProps) 
   return (
     <section
       id="meal-preview"
-      className="relative overflow-hidden rounded-xl border border-border bg-surface p-8 shadow-card lg:col-span-2"
+      className="relative overflow-hidden rounded-xl border border-border bg-surface p-5 shadow-card sm:p-8 lg:col-span-2"
     >
       <div
         className="absolute inset-x-0 top-0 h-1 bg-gradient-accent opacity-80"
@@ -45,7 +45,7 @@ export function TodaysMeals({ meals, editableNames = false }: TodaysMealsProps) 
         </Link>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
         {(Object.keys(MEAL_CONFIG) as MealType[]).map((type) => (
           <MealSection
             key={type}
@@ -56,7 +56,7 @@ export function TodaysMeals({ meals, editableNames = false }: TodaysMealsProps) 
         ))}
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-lg bg-neutral-50 px-4 py-3 text-sm">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-lg bg-neutral-50 px-4 py-3 text-sm sm:mt-8">
         <span className="text-text-secondary">
           <span className="font-mono font-semibold tabular-nums text-text-primary">
             {totalEntries}

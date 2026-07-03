@@ -36,7 +36,7 @@ export function HistoryCalendar({
     now.getFullYear() === year && now.getMonth() === month;
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-border bg-surface p-6 shadow-card sm:p-8">
+    <section className="relative overflow-hidden rounded-xl border border-border bg-surface p-3 shadow-card sm:p-8">
       <div
         className="absolute inset-x-0 top-0 h-1 bg-gradient-accent opacity-80"
         aria-hidden="true"
@@ -73,7 +73,7 @@ export function HistoryCalendar({
         </button>
       </div>
 
-      <div className="mt-6 grid grid-cols-7 gap-1">
+      <div className="mt-6 grid grid-cols-7 gap-0.5 sm:gap-1">
         {WEEKDAY_LABELS.map((label) => (
           <div
             key={label}

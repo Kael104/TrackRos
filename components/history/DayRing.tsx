@@ -169,7 +169,7 @@ export function DayRing({
       height={size}
       viewBox={`0 0 ${size} ${size}`}
       aria-hidden="true"
-      className="shrink-0"
+      className="h-9 w-9 shrink-0 sm:h-14 sm:w-14"
       style={{ opacity }}
     >
       <GlowArc
