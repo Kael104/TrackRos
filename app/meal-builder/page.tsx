@@ -19,7 +19,7 @@ export default function MealBuilderPage() {
     <PageContainer>
       <PageHeader
         title="Meal Builder"
-        description="Build custom meals from Gemini search results or manually entered macros."
+        description="Build custom meals by searching for foods or entering macros manually."
       />
 
       {error && (

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { navLinks } from "@/lib/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, type MouseEvent } from "react";
+import { dashboardHref, navLinks } from "@/lib/navigation";
 
 function NavLinkItem({
   href,
@@ -37,13 +37,28 @@ function NavLinkItem({
 
 export function NavBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  function handleLogoClick(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+
+    if (pathname === dashboardHref) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    router.push(dashboardHref);
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-chrome/95 shadow-soft backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 lg:px-8">
         <Link
-          href="/"
-          className="group flex items-center gap-2 font-heading text-xl font-bold tracking-tight text-text-primary"
+          href={dashboardHref}
+          onClick={handleLogoClick}
+          aria-label="Go to dashboard"
+          className="group flex cursor-pointer items-center gap-2 rounded-lg font-heading text-xl font-bold tracking-tight text-text-primary transition-opacity hover:opacity-80"
         >
           <span
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand shadow-soft"

@@ -201,7 +201,7 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
               </h3>
               <p className="mt-1 text-sm text-text-secondary">
                 {formatAddQuantityLabel(result.quantity, result.servingLabel)} ·{" "}
-                {result.cached ? "From cache" : "Fetched from Gemini"}
+                {result.cached ? "From cache" : "Looked up"}
               </p>
             </div>
             <span className="rounded-full bg-primary-subtle px-3 py-1 font-mono text-sm font-medium text-primary">

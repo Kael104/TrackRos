@@ -3,9 +3,10 @@ export interface NavLink {
   label: string;
 }
 
+export const dashboardHref = "/";
+
 export const navLinks: NavLink[] = [
-  { href: "/", label: "Dashboard" },
-  { href: "/log", label: "Add Food" },
+  { href: dashboardHref, label: "Dashboard" },
   { href: "/meal-builder", label: "Meal Builder" },
   { href: "/history", label: "History" },
   { href: "/settings", label: "Settings" },

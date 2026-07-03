@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { AddFoodFab } from "@/components/layout/AddFoodFab";
 import { Footer } from "@/components/layout/Footer";
 import { NavBar } from "@/components/layout/NavBar";
 import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <SwipeNavigator>{children}</SwipeNavigator>
           </main>
           <Footer />
+          <AddFoodFab />
         </ThemeProvider>
       </body>
     </html>

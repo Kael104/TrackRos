@@ -280,7 +280,7 @@ export function MealBuilder({ presets, loading = false }: MealBuilderProps) {
           Build a meal
         </h2>
         <p className="mt-1 text-xs text-text-muted">
-          Add items via Gemini search or enter macros manually, then save the
+          Add items by searching for foods or entering macros manually, then save the
           meal for quick logging.
         </p>
 
@@ -294,7 +294,7 @@ export function MealBuilder({ presets, loading = false }: MealBuilderProps) {
                 : "border border-border bg-surface text-text-primary hover:bg-neutral-50"
             }`}
           >
-            Search (Gemini)
+            Search
           </button>
           <button
             type="button"

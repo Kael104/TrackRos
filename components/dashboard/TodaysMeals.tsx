@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { MealSection } from "@/components/dashboard/MealSection";
 import {
   MEAL_CONFIG,
@@ -33,21 +31,13 @@ export function TodaysMeals({
         aria-hidden="true"
       />
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="font-heading text-xl font-semibold tracking-tight text-text-primary">
-            Today&apos;s Meals
-          </h2>
-          <p className="mt-2 text-base text-text-secondary">
-            Breakfast, lunch, dinner, and snacks at a glance.
-          </p>
-        </div>
-        <Link
-          href="/log"
-          className="mt-1 shrink-0 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary-subtle"
-        >
-          Add food
-        </Link>
+      <div>
+        <h2 className="font-heading text-xl font-semibold tracking-tight text-text-primary">
+          Today&apos;s Meals
+        </h2>
+        <p className="mt-2 text-base text-text-secondary">
+          Breakfast, lunch, dinner, and snacks at a glance.
+        </p>
       </div>
 
       <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">

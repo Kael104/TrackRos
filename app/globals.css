@@ -201,3 +201,32 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@layer base {
+  button:not(:disabled) {
+    cursor: pointer;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease,
+      box-shadow 150ms ease,
+      transform 150ms ease,
+      filter 150ms ease;
+  }
+
+  button:not(:disabled):hover {
+    filter: brightness(0.94);
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.98);
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  .dark button:not(:disabled):hover {
+    filter: brightness(1.12);
+  }
+}
