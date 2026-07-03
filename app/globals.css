@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+  /* Primary — emerald: health, balance, progress */
+  --color-primary-50: #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-200: #a7f3d0;
+  --color-primary-500: #10b981;
+  --color-primary-600: #059669;
+  --color-primary-700: #047857;
+
+  /* Neutrals — cool slate for a clean, clinical-yet-warm feel */
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-900: #0f172a;
+
+  /* Semantic aliases */
+  --color-background: var(--color-neutral-50);
+  --color-surface: #ffffff;
+  --color-border: var(--color-neutral-200);
+  --color-border-subtle: var(--color-neutral-100);
+  --color-text-primary: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-600);
+  --color-text-muted: var(--color-neutral-400);
+  --color-primary: var(--color-primary-600);
+  --color-primary-hover: var(--color-primary-700);
+  --color-primary-subtle: var(--color-primary-50);
+
+  /* Macro ring colors — consistent across the app */
+  --color-macro-calories: var(--color-primary-500);
+  --color-macro-calories-track: var(--color-primary-100);
+  --color-macro-protein: #a855f7;
+  --color-macro-protein-track: #f3e8ff;
+  --color-macro-carbs: #3b82f6;
+  --color-macro-carbs-track: #dbeafe;
+  --color-macro-fat: #f97316;
+  --color-macro-fat-track: #ffedd5;
+
+  /* Extended nutrient colors */
+  --color-nutrient-fiber: #059669;
+  --color-nutrient-fiber-track: #d1fae5;
+  --color-nutrient-sugar: #ec4899;
+  --color-nutrient-sugar-track: #fce7f3;
+  --color-nutrient-sodium: #6366f1;
+  --color-nutrient-sodium-track: #e0e7ff;
+  --color-nutrient-saturated-fat: #ea580c;
+  --color-nutrient-saturated-fat-track: #ffedd5;
+  --color-nutrient-cholesterol: #8b5cf6;
+  --color-nutrient-cholesterol-track: #ede9fe;
+  --color-nutrient-potassium: #0d9488;
+  --color-nutrient-potassium-track: #ccfbf1;
+  --color-nutrient-calcium: #2563eb;
+  --color-nutrient-calcium-track: #dbeafe;
+  --color-nutrient-iron: #dc2626;
+  --color-nutrient-iron-track: #fee2e2;
+  --color-nutrient-over-limit: #ef4444;
+
+  /* Meal section accents */
+  --color-meal-breakfast: #f59e0b;
+  --color-meal-lunch: #10b981;
+  --color-meal-dinner: #6366f1;
+  --color-meal-snacks: #ec4899;
+
+  /* Typography */
+  --font-heading: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  /* Spacing scale (8px base) — exposed as custom spacing where useful */
+  --spacing-section: 4rem;
+  --spacing-block: 2rem;
+
+  /* Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+
+  /* Shadows */
+  --shadow-soft: 0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.04);
+  --shadow-card: 0 4px 6px -1px rgb(15 23 42 / 0.05), 0 2px 4px -2px rgb(15 23 42 / 0.04);
+  --shadow-elevated: 0 10px 15px -3px rgb(15 23 42 / 0.06), 0 4px 6px -4px rgb(15 23 42 / 0.04);
+
+  /* Gradients */
+  --background-image-gradient-page: linear-gradient(
+    180deg,
+    var(--color-neutral-50) 0%,
+    #eef2f6 100%
+  );
+  --background-image-gradient-brand: linear-gradient(
+    135deg,
+    var(--color-primary-500) 0%,
+    var(--color-primary-700) 100%
+  );
+  --background-image-gradient-accent: linear-gradient(
+    90deg,
+    var(--color-primary-500),
+    var(--color-primary-200)
+  );
+  --background-image-gradient-card-shine: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 0.9) 0%,
+    rgb(248 250 252 / 0.6) 100%
+  );
+}
+
+body {
+  background-color: var(--color-background);
+  background-image: var(--background-image-gradient-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.625;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
