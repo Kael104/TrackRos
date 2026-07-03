@@ -34,7 +34,7 @@ export default function LogPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Today's Log"
+        title="Add Food"
         description="Search for food to look up nutrients. Try something like 3 pc fried chicken."
       />
 

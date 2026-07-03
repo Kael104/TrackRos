@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { Footer } from "@/components/layout/Footer";
 import { NavBar } from "@/components/layout/NavBar";
+import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { ThemeScript } from "@/components/theme/ThemeScript";
 import "./globals.css";
 
 const inter = Inter({
@@ -36,11 +39,17 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html
       lang="en"
       className={`${inter.variable} ${plusJakarta.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col antialiased">
-        <NavBar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <ThemeScript />
+        <ThemeProvider>
+          <NavBar />
+          <main className="flex-1">
+            <SwipeNavigator>{children}</SwipeNavigator>
+          </main>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -9,17 +9,21 @@ interface LogEntryItemProps {
   entry: LogEntry;
   mealType: MealType;
   editable?: boolean;
+  removable?: boolean;
 }
 
 export function LogEntryItem({
   entry,
   mealType,
   editable = false,
+  removable = false,
 }: LogEntryItemProps) {
   const renameLogEntry = useDashboardStore((state) => state.renameLogEntry);
+  const removeLogEntry = useDashboardStore((state) => state.removeLogEntry);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(entry.foodName);
   const [saving, setSaving] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -59,8 +63,20 @@ export function LogEntryItem({
     }
   }
 
+  async function handleRemove() {
+    setRemoving(true);
+
+    try {
+      await removeLogEntry(entry.id, mealType);
+    } catch {
+      // Error is surfaced via the store.
+    } finally {
+      setRemoving(false);
+    }
+  }
+
   return (
-    <li className="flex items-start justify-between gap-3 py-2">
+    <li className="flex items-start gap-3 py-2">
       <div className="min-w-0 flex-1">
         {editable && editing ? (
           <input
@@ -112,6 +128,17 @@ export function LogEntryItem({
       <span className="shrink-0 font-mono text-sm tabular-nums text-text-secondary">
         {entry.calories} kcal
       </span>
+      {removable && (
+        <button
+          type="button"
+          onClick={() => void handleRemove()}
+          disabled={removing || saving}
+          aria-label={`Remove ${entry.foodName}`}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-lg leading-none text-text-muted transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {removing ? "…" : "×"}
+        </button>
+      )}
     </li>
   );
 }

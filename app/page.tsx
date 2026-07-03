@@ -51,7 +51,7 @@ export default function DashboardPage() {
       )}
 
       {loading ? (
-        <p className="text-sm text-text-secondary">Loading today&apos;s log…</p>
+        <p className="text-sm text-text-secondary">Loading today&apos;s meals…</p>
       ) : (
         <div className="grid gap-8 lg:grid-cols-2">
           <MacroRingChart
@@ -65,7 +65,7 @@ export default function DashboardPage() {
             <RemainingCalories macros={macros} />
           </div>
 
-          <TodaysMeals meals={meals} editableNames />
+          <TodaysMeals meals={meals} editableNames removable />
         </div>
       )}
     </PageContainer>

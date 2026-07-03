@@ -26,6 +26,7 @@ import {
   createBuiltMeal,
   deleteCachedFood,
   deleteDayLog,
+  deleteLogEntry,
   deleteMealPreset,
   getDayData,
   getMealPresets,
@@ -79,6 +80,7 @@ interface DashboardStore {
     mealType: MealType,
     displayName: string,
   ) => Promise<void>;
+  removeLogEntry: (entryId: string, mealType: MealType) => Promise<void>;
   resetDay: () => Promise<void>;
 }
 
@@ -405,6 +407,28 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to rename food";
+      set({ error: message });
+      throw error;
+    }
+  },
+
+  removeLogEntry: async (entryId, _mealType) => {
+    const todayIso = formatTodayLabels().iso;
+    if (get().currentDate !== todayIso) {
+      const message = "Cannot remove entries from previous days";
+      set({ error: message });
+      throw new Error(message);
+    }
+
+    set({ error: null });
+
+    try {
+      await deleteLogEntry(Number(entryId));
+      const dayData = await getDayData(todayIso);
+      set(dayData);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to remove food";
       set({ error: message });
       throw error;
     }

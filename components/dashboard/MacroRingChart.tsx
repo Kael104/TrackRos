@@ -101,18 +101,22 @@ export function MacroRingChart({ macros, dateLabel, dateIso }: MacroRingChartPro
             const { current, goal } = macros[key];
 
             return (
-              <MacroRing
+              <div
                 key={key}
-                config={config}
-                current={current}
-                goal={goal}
-              />
+                className="flex w-full items-center justify-center rounded-xl border border-border bg-surface p-4 shadow-soft"
+              >
+                <MacroRing
+                  config={config}
+                  current={current}
+                  goal={goal}
+                />
+              </div>
             );
           },
         )}
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-lg bg-neutral-50 px-4 py-3 text-sm">
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-lg border border-border bg-surface px-4 py-3 text-sm shadow-soft">
         <span className="text-text-secondary">
           <span className="font-mono font-semibold tabular-nums text-text-primary">
             {remainingCalories.toLocaleString()}

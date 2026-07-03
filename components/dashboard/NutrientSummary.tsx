@@ -46,7 +46,7 @@ export function NutrientSummary({ nutrients }: NutrientSummaryProps) {
       </div>
 
       {limitCount > 0 && (
-        <p className="mt-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {limitCount} nutrient{limitCount === 1 ? "" : "s"} over daily limit.
         </p>
       )}

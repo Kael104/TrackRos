@@ -12,9 +12,14 @@ import {
 interface TodaysMealsProps {
   meals: DailyMealLog;
   editableNames?: boolean;
+  removable?: boolean;
 }
 
-export function TodaysMeals({ meals, editableNames = false }: TodaysMealsProps) {
+export function TodaysMeals({
+  meals,
+  editableNames = false,
+  removable = false,
+}: TodaysMealsProps) {
   const totalEntries = countMealEntries(meals);
   const totalCalories = sumDailyCalories(meals);
 
@@ -41,7 +46,7 @@ export function TodaysMeals({ meals, editableNames = false }: TodaysMealsProps) 
           href="/log"
           className="mt-1 shrink-0 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary-subtle"
         >
-          View full log
+          Add food
         </Link>
       </div>
 
@@ -52,11 +57,12 @@ export function TodaysMeals({ meals, editableNames = false }: TodaysMealsProps) 
             type={type}
             entries={meals[type]}
             editableNames={editableNames}
+            removable={removable}
           />
         ))}
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-lg bg-neutral-50 px-4 py-3 text-sm sm:mt-8">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-lg border border-border bg-surface px-4 py-3 text-sm shadow-soft sm:mt-8">
         <span className="text-text-secondary">
           <span className="font-mono font-semibold tabular-nums text-text-primary">
             {totalEntries}

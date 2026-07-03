@@ -114,7 +114,7 @@ export function RecentFoods({ items, loading = false }: RecentFoodsProps) {
           Recent &amp; Frequent
         </h2>
         <p className="mt-2 text-sm text-text-muted">
-          Foods you log will appear here for quick re-add.
+          Foods you add will appear here for quick re-add.
         </p>
       </div>
     );

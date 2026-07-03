@@ -172,7 +172,7 @@ export function MealPresets({
           <Link href="/meal-builder" className="text-primary hover:underline">
             Build one in Meal Builder
           </Link>
-          , or save today&apos;s log above.
+          , or save today&apos;s meals above.
         </p>
       ) : (
         <ul className="mt-4 space-y-2">

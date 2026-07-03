@@ -332,7 +332,7 @@ export function GoalsForm() {
                     return (
                       <div
                         key={key}
-                        className="rounded-lg border border-border-subtle bg-neutral-50/60 px-4 py-3"
+                        className="rounded-lg border border-border bg-surface px-4 py-3 shadow-soft"
                       >
                         <dt className="text-xs text-text-muted">
                           {config.label}
@@ -357,7 +357,7 @@ export function GoalsForm() {
                     return (
                       <div
                         key={key}
-                        className="rounded-lg border border-border-subtle bg-neutral-50/60 px-4 py-3"
+                        className="rounded-lg border border-border bg-surface px-4 py-3 shadow-soft"
                       >
                         <dt className="text-xs text-text-muted">
                           {config.label}

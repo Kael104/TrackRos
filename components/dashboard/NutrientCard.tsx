@@ -23,7 +23,7 @@ export function NutrientCard({ config, nutrient }: NutrientCardProps) {
     : config.color;
 
   return (
-    <article className="rounded-lg border border-border-subtle bg-neutral-50/60 p-4">
+    <article className="rounded-lg border border-border bg-surface p-4 shadow-soft">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-heading text-sm font-medium text-text-secondary">
           {config.label}

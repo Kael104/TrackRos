@@ -533,7 +533,7 @@ export function MealBuilder({ presets, loading = false }: MealBuilderProps) {
           Saved meals
         </h2>
         <p className="mt-1 text-xs text-text-muted">
-          Meals you save here also appear on the Log page for one-tap adding.
+          Meals you save here also appear on Add Food for one-tap adding.
         </p>
 
         {loading ? (

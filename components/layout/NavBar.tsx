@@ -39,7 +39,7 @@ export function NavBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border-subtle bg-surface/90 shadow-soft backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border bg-chrome/95 shadow-soft backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 lg:px-8">
         <Link
           href="/"
@@ -112,7 +112,7 @@ export function NavBar() {
       {mobileOpen && (
         <nav
           id="mobile-nav"
-          className="border-t border-border-subtle bg-surface px-6 py-4 shadow-soft md:hidden"
+          className="border-t border-border-subtle bg-chrome px-6 py-4 shadow-soft md:hidden"
           aria-label="Mobile navigation"
         >
           <ul className="flex flex-col gap-1">

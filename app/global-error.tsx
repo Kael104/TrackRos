@@ -8,7 +8,7 @@ interface GlobalErrorProps {
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   return (
     <html lang="en">
-      <body className="flex min-h-screen items-center justify-center bg-neutral-50 p-8">
+      <body className="flex min-h-screen items-center justify-center bg-background p-8">
         <div className="max-w-md rounded-xl border border-neutral-200 bg-white p-8 text-center shadow-card">
           <h1 className="text-xl font-semibold text-neutral-900">
             Something went wrong

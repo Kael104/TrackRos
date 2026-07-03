@@ -26,7 +26,7 @@ function MacroRemainingRow({
   const percent = getMacroPercent(current, goal);
 
   return (
-    <div className="rounded-lg border border-border-subtle bg-neutral-50/60 px-4 py-3">
+    <div className="rounded-lg border border-border bg-surface px-4 py-3 shadow-soft">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-text-secondary">
           {config.label}
@@ -105,7 +105,7 @@ export function RemainingCalories({ macros }: RemainingCaloriesProps) {
         )}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 rounded-lg border border-border bg-surface p-4 shadow-soft">
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="text-text-secondary">
             <span className="font-mono font-semibold tabular-nums text-text-primary">
@@ -156,10 +156,10 @@ export function RemainingCalories({ macros }: RemainingCaloriesProps) {
       </div>
 
       <p
-        className={`mt-6 rounded-lg px-4 py-3 text-sm ${
+        className={`mt-6 rounded-lg border px-4 py-3 text-sm ${
           isOverGoal
-            ? "bg-red-50 text-red-700"
-            : "bg-neutral-50 text-text-secondary"
+            ? "border-red-200 bg-red-50 text-red-700"
+            : "border-border bg-surface text-text-secondary"
         }`}
       >
         {statusMessage}

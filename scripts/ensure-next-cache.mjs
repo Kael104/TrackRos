@@ -60,6 +60,23 @@ function isCorrupt() {
     return { corrupt: false, reason: "no-cache" };
   }
 
+  // Production `next build` output conflicts with `next dev --turbopack`.
+  if (fs.existsSync(path.join(nextDir, "BUILD_ID"))) {
+    return { corrupt: true, reason: "production-build-cache" };
+  }
+
+  const pagesAppManifest = path.join(
+    nextDir,
+    "server",
+    "pages",
+    "_app",
+    "build-manifest.json",
+  );
+  const pagesDir = path.join(nextDir, "server", "pages");
+  if (fs.existsSync(pagesDir) && !fs.existsSync(pagesAppManifest)) {
+    return { corrupt: true, reason: "missing-build-manifest" };
+  }
+
   if (fs.existsSync(documentPath)) {
     const documentSource = fs.readFileSync(documentPath, "utf8");
     const requiresTurbopack = documentSource.includes("[turbopack]_runtime.js");
