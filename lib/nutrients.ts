@@ -230,7 +230,7 @@ export function isNutrientOverLimit(
   return direction === "limit" && current > goal;
 }
 
-/** Goal-type micros used for the history calendar inner ring. */
+/** Goal-type micros used for the calendar inner ring. */
 export const GOAL_MICRO_KEYS = [
   "fiber",
   "potassium",

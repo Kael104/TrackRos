@@ -1,3 +1,4 @@
+import { formatFoodNameForStorage } from "@/lib/format-food-name";
 import type { FoodNutrients } from "@/lib/gemini";
 import type { FoodRecord } from "@/lib/food-search-types";
 import type { FoodRow } from "@/types/database.types";
@@ -71,7 +72,7 @@ export function nutrientsToFoodInsert(
   source = "gemini",
 ): Omit<FoodRow, "id" | "created_at"> {
   return {
-    name,
+    name: formatFoodNameForStorage(name),
     serving_size: nutrients.servingSize,
     serving_unit: nutrients.servingUnit,
     calories: nutrients.calories,

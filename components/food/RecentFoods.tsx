@@ -99,10 +99,7 @@ export function RecentFoods({ items, loading = false }: RecentFoodsProps) {
   if (loading) {
     return (
       <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-        <h2 className="font-heading text-base font-semibold text-text-primary">
-          Recent &amp; Frequent
-        </h2>
-        <p className="mt-2 text-sm text-text-secondary">Loading recent foods…</p>
+        <p className="text-sm text-text-secondary">Loading recent foods…</p>
       </div>
     );
   }
@@ -110,10 +107,7 @@ export function RecentFoods({ items, loading = false }: RecentFoodsProps) {
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-        <h2 className="font-heading text-base font-semibold text-text-primary">
-          Recent &amp; Frequent
-        </h2>
-        <p className="mt-2 text-sm text-text-muted">
+        <p className="text-sm text-text-muted">
           Foods you add will appear here for quick re-add.
         </p>
       </div>
@@ -122,14 +116,7 @@ export function RecentFoods({ items, loading = false }: RecentFoodsProps) {
 
   return (
     <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-      <h2 className="font-heading text-base font-semibold text-text-primary">
-        Recent &amp; Frequent
-      </h2>
-      <p className="mt-1 text-xs text-text-muted">
-        Set quantity and unit (e.g. 2 piece or 120 g) before adding.
-      </p>
-
-      <ul className="mt-4 space-y-2">
+      <ul className="space-y-2">
         {items.map((item) => {
           const state = getRowState(item);
           const isFrequent = item.useCount >= FREQUENT_FOOD_THRESHOLD;

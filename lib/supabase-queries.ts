@@ -7,6 +7,7 @@ import {
   foodRecordToNutrients,
   nutrientsToFoodInsert,
 } from "@/lib/food-mapper";
+import { normalizeFoodNameForLookup } from "@/lib/format-food-name";
 import type { FoodNutrients } from "@/lib/gemini";
 import {
   DEFAULT_DAILY_GOALS,
@@ -300,10 +301,15 @@ function addScaledToTotals(
 }
 
 export async function findFoodByName(name: string): Promise<FoodRow | null> {
+  const normalized = normalizeFoodNameForLookup(name);
+  if (!normalized) {
+    return null;
+  }
+
   const { data, error } = await supabase
     .from("foods")
     .select("*")
-    .eq("name", name)
+    .ilike("name", normalized)
     .maybeSingle();
 
   if (error) {
@@ -314,6 +320,49 @@ export async function findFoodByName(name: string): Promise<FoodRow | null> {
   }
 
   return data;
+}
+
+export async function findFoodById(id: number): Promise<FoodRow | null> {
+  const { data, error } = await supabase
+    .from("foods")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      throw new Error(SCHEMA_SETUP_MESSAGE);
+    }
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function searchFoodsByName(
+  prefix: string,
+  limit = 8,
+): Promise<FoodRow[]> {
+  const normalized = prefix.toLowerCase().trim();
+  if (!normalized) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("foods")
+    .select("*")
+    .ilike("name", `${normalized}%`)
+    .order("name")
+    .limit(limit);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      throw new Error(SCHEMA_SETUP_MESSAGE);
+    }
+    throw new Error(error.message);
+  }
+
+  return data ?? [];
 }
 
 export async function insertFood(

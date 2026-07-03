@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "migrate:capitalize-foods": "node scripts/capitalize-food-names.mjs",
     "gen:types": "supabase gen types typescript --schema public --linked > types/database.types.ts"
   },
   "dependencies": {

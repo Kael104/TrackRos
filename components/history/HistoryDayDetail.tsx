@@ -60,7 +60,7 @@ export function HistoryDayDetail({
   return (
     <section
       className="relative overflow-hidden rounded-xl border border-border bg-surface p-6 shadow-card sm:p-8"
-      aria-labelledby="history-day-detail-title"
+      aria-labelledby="calendar-day-detail-title"
     >
       <div
         className="absolute inset-x-0 top-0 h-1 bg-gradient-accent opacity-80"
@@ -69,7 +69,7 @@ export function HistoryDayDetail({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2
-          id="history-day-detail-title"
+          id="calendar-day-detail-title"
           className="font-heading text-xl font-semibold tracking-tight text-text-primary"
         >
           Day Detail

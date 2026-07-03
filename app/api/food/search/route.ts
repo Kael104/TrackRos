@@ -4,7 +4,7 @@ import { buildFinalizedSearchResponse } from "@/lib/build-food-search-response";
 import { foodRowToRecord, nutrientsToFoodInsert } from "@/lib/food-mapper";
 import { lookupFood } from "@/lib/gemini";
 import { parseFoodInput } from "@/lib/parse-food-input";
-import { findFoodByName } from "@/lib/supabase-queries";
+import { findFoodById, findFoodByName } from "@/lib/supabase-queries";
 import { SCHEMA_SETUP_MESSAGE } from "@/lib/supabase-schema";
 
 export async function GET(request: NextRequest) {
@@ -22,16 +22,33 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const idParam = request.nextUrl.searchParams.get("id");
+    const foodId = idParam ? Number.parseInt(idParam, 10) : NaN;
+
+    if (Number.isFinite(foodId) && foodId > 0) {
+      const foodById = await findFoodById(foodId);
+      if (foodById) {
+        return NextResponse.json(
+          buildFinalizedSearchResponse(
+            foodRowToRecord(foodById),
+            quantity,
+            unit,
+            true,
+          ),
+        );
+      }
+    }
+
     let cached = true;
     const food = await findFoodByName(normalizedName);
 
     if (!food) {
       cached = false;
       const nutrients = await lookupFood(foodName);
-      const insert = nutrientsToFoodInsert(normalizedName, nutrients);
+      const insert = nutrientsToFoodInsert(foodName, nutrients);
       const foodRecord = {
         id: 0,
-        name: normalizedName,
+        name: insert.name,
         servingSize: insert.serving_size,
         servingUnit: insert.serving_unit,
         calories: insert.calories,

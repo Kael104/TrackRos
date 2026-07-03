@@ -61,7 +61,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
       });
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to load history";
+        error instanceof Error ? error.message : "Failed to load calendar";
       set({ loading: false, error: message });
     }
   },

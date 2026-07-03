@@ -99,6 +99,34 @@
 
     alter table public.log_entries add column if not exists display_name text;
 
+    -- Capitalize existing food names (sentence case). Safe to re-run.
+    do $$
+    declare
+      r record;
+      formatted text;
+      existing_id bigint;
+    begin
+      for r in select id, name from public.foods loop
+        formatted := upper(left(btrim(r.name), 1)) || lower(substring(btrim(r.name) from 2));
+        if formatted = '' or formatted = r.name then
+          continue;
+        end if;
+
+        select id into existing_id
+        from public.foods
+        where lower(btrim(name)) = lower(btrim(formatted)) and id <> r.id
+        limit 1;
+
+        if existing_id is not null then
+          update public.log_entries set food_id = existing_id where food_id = r.id;
+          update public.meal_preset_items set food_id = existing_id where food_id = r.id;
+          delete from public.foods where id = r.id;
+        else
+          update public.foods set name = formatted where id = r.id;
+        end if;
+      end loop;
+    end $$;
+
     -- Seed singleton goals row (matches lib/nutrients.ts defaults)
     insert into public.user_goals (
       age,
