@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
   try {
     let cached = true;
-    let food = await findFoodByName(normalizedName);
+    const food = await findFoodByName(normalizedName);
 
     if (!food) {
       cached = false;
