@@ -69,7 +69,7 @@ interface NutrientCardGridProps {
 
 export function NutrientCardGrid({ nutrients }: NutrientCardGridProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4">
       {(Object.keys(NUTRIENT_CONFIG) as ExtendedNutrientKey[]).map((key) => (
         <NutrientCard
           key={key}

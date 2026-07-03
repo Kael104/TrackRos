@@ -60,11 +60,12 @@ export default function DashboardPage() {
             dateIso={todayIso}
           />
 
-          <NutrientSummary nutrients={nutrients} />
+          <div className="grid gap-8 lg:col-span-2 lg:grid-cols-2 lg:items-stretch">
+            <NutrientSummary nutrients={nutrients} />
+            <RemainingCalories macros={macros} />
+          </div>
 
           <TodaysMeals meals={meals} />
-
-          <RemainingCalories macros={macros} />
         </div>
       )}
     </PageContainer>

@@ -105,9 +105,13 @@ export function HistoryDayDetail({
       ) : dayData ? (
         <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <MacroRingChart macros={dayData.macros} />
-          <NutrientSummary nutrients={dayData.nutrients} />
+
+          <div className="grid gap-8 lg:col-span-2 lg:grid-cols-2 lg:items-stretch">
+            <NutrientSummary nutrients={dayData.nutrients} />
+            <RemainingCalories macros={dayData.macros} />
+          </div>
+
           <TodaysMeals meals={dayData.meals} />
-          <RemainingCalories macros={dayData.macros} />
         </div>
       ) : null}
     </section>
