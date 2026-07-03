@@ -1,4 +1,0 @@
-{"sessionId":"a8c971","runId":"post-fix","hypothesisId":"H1-H3","location":"app/page.tsx:DashboardPage","message":"DashboardPage render start","data":{"step":"entry"},"timestamp":1782917409267}
-{"sessionId":"a8c971","runId":"post-fix","hypothesisId":"H1","location":"app/page.tsx:DashboardPage","message":"DashboardPage date labels computed","data":{"todayLabel":"Wednesday, Jul 1, 2026","todayIso":"2026-07-01","dateSource":"native-intl"},"timestamp":1782917409309}
-{"sessionId":"a8c971","runId":"post-fix","hypothesisId":"H1-H3","location":"app/page.tsx:DashboardPage","message":"DashboardPage render start","data":{"step":"entry"},"timestamp":1782917654005}
-{"sessionId":"a8c971","runId":"post-fix","hypothesisId":"H1","location":"app/page.tsx:DashboardPage","message":"DashboardPage date labels computed","data":{"todayLabel":"Wednesday, Jul 1, 2026","todayIso":"2026-07-01","dateSource":"native-intl"},"timestamp":1782917654014}
