@@ -2,31 +2,6 @@ import fs from "node:fs";
 import net from "node:net";
 import path from "node:path";
 
-const LOG_ENDPOINT =
-  "http://127.0.0.1:7480/ingest/76e8e424-2f5e-40c0-837a-cc42d78f81b4";
-const SESSION_ID = "0ee88e";
-
-function log(hypothesisId, message, data) {
-  // #region agent log
-  fetch(LOG_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": SESSION_ID,
-    },
-    body: JSON.stringify({
-      sessionId: SESSION_ID,
-      runId: process.env.DEBUG_RUN_ID ?? "pre-fix",
-      hypothesisId,
-      location: "scripts/ensure-next-cache.mjs",
-      message,
-      data,
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-}
-
 const root = process.cwd();
 const nextDir = path.join(root, ".next");
 const runtimePath = path.join(
@@ -60,7 +35,6 @@ function isCorrupt() {
     return { corrupt: false, reason: "no-cache" };
   }
 
-  // Production `next build` output conflicts with `next dev --turbopack`.
   if (fs.existsSync(path.join(nextDir, "BUILD_ID"))) {
     return { corrupt: true, reason: "production-build-cache" };
   }
@@ -105,10 +79,7 @@ function isPortInUse(port) {
 }
 
 const status = isCorrupt();
-log("A", "cache health check", status);
-
 const port3000InUse = await isPortInUse(3000);
-log("F", "port 3000 availability", { port3000InUse });
 
 if (port3000InUse) {
   console.warn(
@@ -117,7 +88,6 @@ if (port3000InUse) {
 }
 
 if (status.corrupt) {
-  log("A", "removing corrupt .next cache", { reason: status.reason });
   fs.rmSync(nextDir, { recursive: true, force: true });
   console.warn(
     `[trackros] Removed corrupt .next cache (${status.reason}). Starting fresh.`,

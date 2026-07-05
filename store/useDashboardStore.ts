@@ -16,23 +16,24 @@ import type {
   RecentFoodItem,
 } from "@/lib/presets-types";
 import type { ScaledNutrients } from "@/lib/scale-nutrients";
+import { buildFinalizedSearchResponse } from "@/lib/build-food-search-response";
 import {
-  updateLogEntryDisplayName,
-  addLogEntry,
-  addPresetToLog,
-  buildFoodSearchResponse,
-  createMealPreset,
-  createMealPresetFromDay,
-  createBuiltMeal,
-  deleteCachedFood,
-  deleteDayLog,
-  deleteLogEntry,
-  deleteMealPreset,
-  getDayData,
-  getMealPresets,
-  getRecentFoods,
-} from "@/lib/supabase-queries";
-import { getPresetsSchemaStatus, getSchemaStatus } from "@/lib/supabase-schema";
+  addFoodToLog,
+  addMealPresetToLog,
+  fetchDayData,
+  fetchMealPresets,
+  fetchPresetsSchemaStatus,
+  fetchRecentFoods,
+  fetchSchemaStatus,
+  removeCachedFood,
+  removeLogEntry,
+  removeMealPreset,
+  renameLogEntry,
+  resetDayLog,
+  saveBuiltMeal,
+  saveMealPreset,
+  saveMealPresetFromDay,
+} from "@/app/actions/dashboard";
 
 interface DashboardStore {
   currentDate: string;
@@ -180,8 +181,8 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ loading: true, error: null, currentDate: date });
 
     try {
-      const schemaStatus = await getSchemaStatus();
-      const dayData = await getDayData(date);
+      const schemaStatus = await fetchSchemaStatus();
+      const dayData = await fetchDayData(date);
       set({
         ...dayData,
         loading: false,
@@ -200,7 +201,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ recentsLoading: true });
 
     try {
-      const recents = await getRecentFoods();
+      const recents = await fetchRecentFoods();
       set({ recents, recentsLoading: false });
     } catch (error) {
       const message =
@@ -213,9 +214,9 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ presetsLoading: true });
 
     try {
-      const presetsStatus = await getPresetsSchemaStatus();
+      const presetsStatus = await fetchPresetsSchemaStatus();
       const presets =
-        presetsStatus === "ready" ? await getMealPresets() : [];
+        presetsStatus === "ready" ? await fetchMealPresets() : [];
       set({
         presets,
         presetsAvailable: presetsStatus === "ready",
@@ -233,7 +234,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      const entry = await addLogEntry(date, result, mealType);
+      const entry = await addFoodToLog(date, result, mealType);
       const { scaledNutrients } = result;
 
       set((state) => ({
@@ -254,7 +255,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   },
 
   quickAddFood: async (food, quantity, unit, mealType) => {
-    const result = buildFoodSearchResponse(food, quantity, unit);
+    const result = buildFinalizedSearchResponse(food, quantity, unit, true);
     await get().addFood(result, mealType);
   },
 
@@ -263,7 +264,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      const entries = await addPresetToLog(date, preset, mealType);
+      const entries = await addMealPresetToLog(date, preset, mealType);
 
       set((state) => {
         let nextMacros = state.macros;
@@ -271,10 +272,11 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
         const newEntries = [...state.meals[mealType], ...entries];
 
         preset.items.forEach((item, index) => {
-          const result = buildFoodSearchResponse(
+          const result = buildFinalizedSearchResponse(
             item.food,
             item.servings,
             item.servingLabel,
+            true,
           );
           const entry = entries[index];
           const applied = applyScaledToState(
@@ -309,7 +311,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      const preset = await createMealPreset(name, mealType, items);
+      const preset = await saveMealPreset(name, mealType, items);
       set((state) => ({
         presets: [preset, ...state.presets.filter((p) => p.id !== preset.id)],
       }));
@@ -325,7 +327,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      const preset = await createBuiltMeal(name, mealType, items);
+      const preset = await saveBuiltMeal(name, mealType, items);
       set((state) => ({
         presets: [preset, ...state.presets.filter((p) => p.id !== preset.id)],
       }));
@@ -341,7 +343,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      const preset = await createMealPresetFromDay(name, date, mealType);
+      const preset = await saveMealPresetFromDay(name, date, mealType);
       set((state) => ({
         presets: [preset, ...state.presets.filter((p) => p.id !== preset.id)],
       }));
@@ -359,7 +361,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      await deleteMealPreset(id);
+      await removeMealPreset(id);
       set((state) => ({
         presets: state.presets.filter((preset) => preset.id !== id),
       }));
@@ -375,11 +377,11 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      await deleteCachedFood(foodId);
+      await removeCachedFood(foodId);
       const date = get().currentDate;
-      const dayData = await getDayData(date);
-      const recents = await getRecentFoods();
-      const presets = get().presetsAvailable ? await getMealPresets() : get().presets;
+      const dayData = await fetchDayData(date);
+      const recents = await fetchRecentFoods();
+      const presets = get().presetsAvailable ? await fetchMealPresets() : get().presets;
       set({ ...dayData, recents, presets });
     } catch (error) {
       const message =
@@ -393,7 +395,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      await updateLogEntryDisplayName(Number(entryId), displayName);
+      await renameLogEntry(Number(entryId), displayName);
       const trimmed = displayName.trim();
 
       set((state) => ({
@@ -423,8 +425,8 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      await deleteLogEntry(Number(entryId));
-      const dayData = await getDayData(todayIso);
+      await removeLogEntry(Number(entryId));
+      const dayData = await fetchDayData(todayIso);
       set(dayData);
     } catch (error) {
       const message =
@@ -439,8 +441,8 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ error: null });
 
     try {
-      await deleteDayLog(date);
-      const dayData = await getDayData(date);
+      await resetDayLog(date);
+      const dayData = await fetchDayData(date);
       set(dayData);
     } catch (error) {
       const message =

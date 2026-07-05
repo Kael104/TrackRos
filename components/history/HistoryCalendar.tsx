@@ -3,7 +3,7 @@ import {
   buildCalendarDays,
   getMonthLabel,
 } from "@/lib/format-date";
-import type { DayData } from "@/lib/supabase-queries";
+import type { DayData } from "@/lib/day-data";
 import type { MonthRef } from "@/store/useHistoryStore";
 
 interface HistoryCalendarProps {

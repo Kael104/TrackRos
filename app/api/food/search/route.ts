@@ -1,19 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { buildFinalizedSearchResponse } from "@/lib/build-food-search-response";
+import { csrfDenied, isSameOriginRequest } from "@/lib/csrf";
 import { foodRowToRecord, nutrientsToFoodInsert } from "@/lib/food-mapper";
 import { lookupFood } from "@/lib/gemini";
 import { parseFoodInput } from "@/lib/parse-food-input";
 import { findFoodById, findFoodByName } from "@/lib/supabase-queries";
 import { SCHEMA_SETUP_MESSAGE } from "@/lib/supabase-schema";
+import {
+  foodIdParamSchema,
+  foodQuerySchema,
+  safeParse,
+} from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
-  const query = request.nextUrl.searchParams.get("q")?.trim();
-
-  if (!query) {
-    return NextResponse.json({ error: "Missing search query" }, { status: 400 });
+  if (!isSameOriginRequest(request)) {
+    return csrfDenied();
   }
 
+  const rawQuery = request.nextUrl.searchParams.get("q")?.trim() ?? "";
+  const queryResult = safeParse(foodQuerySchema, rawQuery);
+  if (!queryResult.success) {
+    return NextResponse.json({ error: queryResult.error }, { status: 400 });
+  }
+
+  const query = queryResult.data;
   const { quantity, unit, foodName } = parseFoodInput(query);
   const normalizedName = foodName.toLowerCase().trim();
 
@@ -23,10 +34,14 @@ export async function GET(request: NextRequest) {
 
   try {
     const idParam = request.nextUrl.searchParams.get("id");
-    const foodId = idParam ? Number.parseInt(idParam, 10) : NaN;
+    if (idParam !== null && idParam !== "") {
+      const parsedId = Number.parseInt(idParam, 10);
+      const idResult = safeParse(foodIdParamSchema, parsedId);
+      if (!idResult.success) {
+        return NextResponse.json({ error: idResult.error }, { status: 400 });
+      }
 
-    if (Number.isFinite(foodId) && foodId > 0) {
-      const foodById = await findFoodById(foodId);
+      const foodById = await findFoodById(idResult.data);
       if (foodById) {
         return NextResponse.json(
           buildFinalizedSearchResponse(

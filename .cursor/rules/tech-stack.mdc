@@ -38,6 +38,7 @@ src/
 ## Environment Variables
 
 - Store in `.env.local` for local development
-- Prefix with `VITE_` for client-side access
+- Use `NEXT_PUBLIC_` prefix only for values safe to expose in the browser bundle
+- Keep secrets server-only: `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `APP_BASIC_AUTH_*`
 - Never commit `.env.local` to version control
 - Document all required variables in `.env.example`

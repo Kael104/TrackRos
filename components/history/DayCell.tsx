@@ -1,6 +1,6 @@
 import { DayRing } from "@/components/history/DayRing";
 import { countMealEntries } from "@/lib/meals";
-import type { DayData } from "@/lib/supabase-queries";
+import type { DayData } from "@/lib/day-data";
 
 interface DayCellProps {
   dayOfMonth: number;

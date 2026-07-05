@@ -17,11 +17,12 @@ import {
   type ExtendedNutrientKey,
   type MacroKey,
 } from "@/lib/nutrients";
-import { getGoals, updateGoals } from "@/lib/supabase-queries";
 import {
-  getSchemaStatus,
-  SCHEMA_SETUP_MESSAGE,
-} from "@/lib/supabase-schema";
+  fetchGoals,
+  fetchSettingsSchemaStatus,
+  saveGoals,
+} from "@/app/actions/settings";
+import { SCHEMA_SETUP_MESSAGE } from "@/lib/schema-messages";
 
 const INPUT_CLASS =
   "w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary shadow-soft placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
@@ -83,14 +84,14 @@ export function GoalsForm() {
     setSuccess(false);
 
     try {
-      const schemaStatus = await getSchemaStatus();
+      const schemaStatus = await fetchSettingsSchemaStatus();
       setSetupRequired(schemaStatus === "missing");
 
       if (schemaStatus === "missing") {
         return;
       }
 
-      const goals = await getGoals();
+      const goals = await fetchGoals();
       if (goals) {
         setCaloriesInput(String(goals.calories));
         setProteinInput(String(goals.protein_g));
@@ -131,7 +132,7 @@ export function GoalsForm() {
     setSuccess(false);
 
     try {
-      await updateGoals(computeGoalPayload(calories, protein, age, gender));
+      await saveGoals(computeGoalPayload(calories, protein, age, gender));
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save goals");

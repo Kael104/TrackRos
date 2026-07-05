@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { FoodRecord, FoodSearchResponse } from "@/lib/food-search-types";
 import { buildFinalizedSearchResponse } from "@/lib/build-food-search-response";
 import { eachDayOfInterval, format, parseISO } from "date-fns";
@@ -12,13 +14,10 @@ import type { FoodNutrients } from "@/lib/gemini";
 import {
   DEFAULT_DAILY_GOALS,
   DEFAULT_DAILY_NUTRIENTS,
-  type DailyMacros,
-  type DailyNutrients,
   type ExtendedNutrientKey,
 } from "@/lib/nutrients";
 import {
   DEFAULT_DAILY_MEALS,
-  type DailyMealLog,
   type LogEntry,
   type MealType,
 } from "@/lib/meals";
@@ -30,13 +29,10 @@ import type {
   RecentFoodItem,
 } from "@/lib/presets-types";
 import { scaleNutrients, type ScaledNutrients } from "@/lib/scale-nutrients";
-import {
-  getPresetsSchemaStatus,
-  getSchemaStatus,
-  isMissingTableError,
-  SCHEMA_SETUP_MESSAGE,
-} from "@/lib/supabase-schema";
-import { supabase } from "@/lib/supabase";
+import type { DayData } from "@/lib/day-data";
+import { getPresetsSchemaStatus, getSchemaStatus, isMissingTableError, SCHEMA_SETUP_MESSAGE } from "@/lib/supabase-schema";
+import { sanitizeDbError } from "@/lib/db-errors";
+import { supabase } from "@/lib/supabase-server";
 import type { FoodRow, UserGoalsRow } from "@/types/database.types";
 
 const MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner", "snacks"];
@@ -52,11 +48,7 @@ const EXTENDED_NUTRIENT_KEYS: ExtendedNutrientKey[] = [
   "iron",
 ];
 
-export interface DayData {
-  macros: DailyMacros;
-  nutrients: DailyNutrients;
-  meals: DailyMealLog;
-}
+export type { DayData };
 
 function emptyDayData(
   goals?: UserGoalsRow | null,
@@ -313,10 +305,7 @@ export async function findFoodByName(name: string): Promise<FoodRow | null> {
     .maybeSingle();
 
   if (error) {
-    if (isMissingTableError(error)) {
-      throw new Error(SCHEMA_SETUP_MESSAGE);
-    }
-    throw new Error(error.message);
+    sanitizeDbError(error, "findFoodByName");
   }
 
   return data;
@@ -330,10 +319,7 @@ export async function findFoodById(id: number): Promise<FoodRow | null> {
     .maybeSingle();
 
   if (error) {
-    if (isMissingTableError(error)) {
-      throw new Error(SCHEMA_SETUP_MESSAGE);
-    }
-    throw new Error(error.message);
+    sanitizeDbError(error, "findFoodById");
   }
 
   return data;
@@ -356,10 +342,7 @@ export async function searchFoodsByName(
     .limit(limit);
 
   if (error) {
-    if (isMissingTableError(error)) {
-      throw new Error(SCHEMA_SETUP_MESSAGE);
-    }
-    throw new Error(error.message);
+    sanitizeDbError(error, "searchFoodsByName");
   }
 
   return data ?? [];
@@ -397,7 +380,7 @@ export async function insertFood(
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    sanitizeDbError(error, "insertFood");
   }
 
   return data;
@@ -411,7 +394,7 @@ export async function getOrCreateDailyLog(logDate: string): Promise<number> {
     .maybeSingle();
 
   if (selectError) {
-    throw new Error(selectError.message);
+    sanitizeDbError(selectError, "getOrCreateDailyLog/select");
   }
 
   if (existing) {
@@ -425,7 +408,7 @@ export async function getOrCreateDailyLog(logDate: string): Promise<number> {
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    sanitizeDbError(error, "getOrCreateDailyLog/insert");
   }
 
   return data.id;
@@ -440,30 +423,9 @@ export async function getGoals(): Promise<UserGoalsRow | null> {
 
   if (error) {
     if (isMissingTableError(error)) {
-      // #region agent log
-      fetch("http://127.0.0.1:7480/ingest/76e8e424-2f5e-40c0-837a-cc42d78f81b4", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "c99f32",
-        },
-        body: JSON.stringify({
-          sessionId: "c99f32",
-          location: "lib/supabase-queries.ts:getGoals",
-          message: "user_goals missing, using defaults",
-          data: {
-            hypothesisId: "H1-fix",
-            errorCode: error.code,
-            errorMessage: error.message,
-          },
-          timestamp: Date.now(),
-          runId: "post-fix",
-        }),
-      }).catch(() => {});
-      // #endregion
       return null;
     }
-    throw new Error(error.message);
+    sanitizeDbError(error, "getGoals");
   }
 
   return data;
@@ -504,7 +466,7 @@ export async function updateGoals(
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    sanitizeDbError(error, "updateGoals");
   }
 
   return data;
@@ -523,23 +485,6 @@ type LogEntryWithFood = {
 };
 
 export async function getDayData(logDate: string): Promise<DayData> {
-  // #region agent log
-  fetch("http://127.0.0.1:7480/ingest/76e8e424-2f5e-40c0-837a-cc42d78f81b4", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "c99f32",
-    },
-    body: JSON.stringify({
-      sessionId: "c99f32",
-      location: "lib/supabase-queries.ts:getDayData",
-      message: "getDayData invoked",
-      data: { hypothesisId: "H5", logDate, runtime: "client-or-server" },
-      timestamp: Date.now(),
-      runId: "pre-fix",
-    }),
-  }).catch(() => {});
-  // #endregion
   if ((await getSchemaStatus()) === "missing") {
     return goalsRowToDayDataBase(null);
   }
@@ -554,7 +499,7 @@ export async function getDayData(logDate: string): Promise<DayData> {
     .maybeSingle();
 
   if (logError) {
-    throw new Error(logError.message);
+    sanitizeDbError(logError, "getDayData/dailyLog");
   }
 
   if (!dailyLog) {
@@ -568,7 +513,7 @@ export async function getDayData(logDate: string): Promise<DayData> {
     .order("created_at", { ascending: true });
 
   if (entriesError) {
-    throw new Error(entriesError.message);
+    sanitizeDbError(entriesError, "getDayData/entries");
   }
 
   if (!entries?.length) {
@@ -597,7 +542,7 @@ export async function getRangeDayData(
     .lte("log_date", endIso);
 
   if (logsError) {
-    throw new Error(logsError.message);
+    sanitizeDbError(logsError, "getRangeDayData/logs");
   }
 
   if (!dailyLogs?.length) {
@@ -613,7 +558,7 @@ export async function getRangeDayData(
     .order("created_at", { ascending: true });
 
   if (entriesError) {
-    throw new Error(entriesError.message);
+    sanitizeDbError(entriesError, "getRangeDayData/entries");
   }
 
   const entriesByLogId = new Map<number, LogEntryWithFood[]>();
@@ -694,7 +639,7 @@ export async function addLogEntry(
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    sanitizeDbError(error, "addLogEntry");
   }
 
   return buildLogEntry(
@@ -712,7 +657,7 @@ export async function deleteCachedFood(foodId: number): Promise<void> {
     .eq("food_id", foodId);
 
   if (logError) {
-    throw new Error(logError.message);
+    sanitizeDbError(logError, "deleteCachedFood/logEntries");
   }
 
   const { error: presetItemsError } = await supabase
@@ -721,7 +666,7 @@ export async function deleteCachedFood(foodId: number): Promise<void> {
     .eq("food_id", foodId);
 
   if (presetItemsError && !isMissingTableError(presetItemsError)) {
-    throw new Error(presetItemsError.message);
+    sanitizeDbError(presetItemsError, "deleteCachedFood/presetItems");
   }
 
   const { error: foodError } = await supabase
@@ -730,7 +675,7 @@ export async function deleteCachedFood(foodId: number): Promise<void> {
     .eq("id", foodId);
 
   if (foodError) {
-    throw new Error(foodError.message);
+    sanitizeDbError(foodError, "deleteCachedFood/foods");
   }
 }
 
@@ -741,7 +686,7 @@ export async function deleteLogEntry(entryId: number): Promise<void> {
     .eq("id", entryId);
 
   if (error) {
-    throw new Error(error.message);
+    sanitizeDbError(error, "deleteLogEntry");
   }
 }
 
@@ -760,7 +705,7 @@ export async function updateLogEntryDisplayName(
     .eq("id", entryId);
 
   if (error) {
-    throw new Error(error.message);
+    sanitizeDbError(error, "updateLogEntryDisplayName");
   }
 }
 
@@ -771,7 +716,7 @@ export async function deleteDayLog(logDate: string): Promise<void> {
     .eq("log_date", logDate);
 
   if (error) {
-    throw new Error(error.message);
+    sanitizeDbError(error, "deleteDayLog");
   }
 }
 
@@ -903,7 +848,7 @@ export async function getRecentFoods(limit = 12): Promise<RecentFoodItem[]> {
     if (isMissingTableError(error)) {
       return [];
     }
-    throw new Error(error.message);
+    sanitizeDbError(error, "getRecentFoods");
   }
 
   const aggregated = new Map<
@@ -1029,7 +974,7 @@ export async function getMealPresets(): Promise<MealPreset[]> {
     if (isMissingTableError(error)) {
       return [];
     }
-    throw new Error(error.message);
+    sanitizeDbError(error, "getMealPresets");
   }
 
   return ((data ?? []) as PresetWithItems[]).map(buildMealPreset);
@@ -1051,7 +996,7 @@ export async function createMealPreset(
     .single();
 
   if (presetError) {
-    throw new Error(presetError.message);
+    sanitizeDbError(presetError, "createMealPreset/preset");
   }
 
   const itemRows = items.map((item) => ({
@@ -1067,7 +1012,7 @@ export async function createMealPreset(
 
   if (itemsError) {
     await supabase.from("meal_presets").delete().eq("id", preset.id);
-    throw new Error(itemsError.message);
+    sanitizeDbError(itemsError, "createMealPreset/items");
   }
 
   const presets = await getMealPresets();
@@ -1095,7 +1040,7 @@ export async function createMealPresetFromDay(
     .maybeSingle();
 
   if (logError) {
-    throw new Error(logError.message);
+    sanitizeDbError(logError, "createMealPresetFromDay/dailyLog");
   }
 
   if (!dailyLog) {
@@ -1109,7 +1054,7 @@ export async function createMealPresetFromDay(
     .eq("meal_type", mealType);
 
   if (entriesError) {
-    throw new Error(entriesError.message);
+    sanitizeDbError(entriesError, "createMealPresetFromDay/entries");
   }
 
   if (!entries?.length) {
@@ -1132,7 +1077,7 @@ export async function deleteMealPreset(id: number): Promise<void> {
   const { error } = await supabase.from("meal_presets").delete().eq("id", id);
 
   if (error) {
-    throw new Error(error.message);
+    sanitizeDbError(error, "deleteMealPreset");
   }
 }
 
@@ -1158,7 +1103,7 @@ export async function addPresetToLog(
       .single();
 
     if (error) {
-      throw new Error(error.message);
+      sanitizeDbError(error, "addPresetToLog");
     }
 
     entries.push(

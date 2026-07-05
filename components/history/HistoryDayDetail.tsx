@@ -8,7 +8,8 @@ import { NutrientSummary } from "@/components/dashboard/NutrientSummary";
 import { RemainingCalories } from "@/components/dashboard/RemainingCalories";
 import { TodaysMeals } from "@/components/dashboard/TodaysMeals";
 import { formatTodayLabels } from "@/lib/format-date";
-import { getDayData, type DayData } from "@/lib/supabase-queries";
+import type { DayData } from "@/lib/day-data";
+import { fetchHistoryDayData } from "@/app/actions/history";
 
 interface HistoryDayDetailProps {
   selectedDate: string;
@@ -33,7 +34,7 @@ export function HistoryDayDetail({
       setError(null);
 
       try {
-        const data = await getDayData(selectedDate);
+        const data = await fetchHistoryDayData(selectedDate);
         if (!cancelled) {
           setDayData(data);
           setLoading(false);

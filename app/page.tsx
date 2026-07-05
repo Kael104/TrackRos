@@ -9,7 +9,7 @@ import { TodaysMeals } from "@/components/dashboard/TodaysMeals";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { formatTodayLabels } from "@/lib/format-date";
-import { SCHEMA_SETUP_MESSAGE } from "@/lib/supabase-schema";
+import { SCHEMA_SETUP_MESSAGE } from "@/lib/schema-messages";
 import { useDashboardStore } from "@/store/useDashboardStore";
 
 export default function DashboardPage() {

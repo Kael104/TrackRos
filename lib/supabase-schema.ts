@@ -1,9 +1,11 @@
+import "server-only";
+
 import type { PostgrestError } from "@supabase/supabase-js";
 
-import { supabase } from "@/lib/supabase";
+import { SCHEMA_SETUP_MESSAGE } from "@/lib/schema-messages";
+import { supabase } from "@/lib/supabase-server";
 
-export const SCHEMA_SETUP_MESSAGE =
-  "Trackros database tables are missing. Open Supabase Dashboard → SQL Editor, paste the contents of supabase/schema.sql, and run it.";
+export { SCHEMA_SETUP_MESSAGE };
 
 export function isMissingTableError(
   error: Pick<PostgrestError, "code" | "message">,
@@ -26,27 +28,6 @@ export async function getSchemaStatus(): Promise<"ready" | "missing"> {
 
   if (error && isMissingTableError(error)) {
     cachedSchemaStatus = "missing";
-    // #region agent log
-    fetch("http://127.0.0.1:7480/ingest/76e8e424-2f5e-40c0-837a-cc42d78f81b4", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "c99f32",
-      },
-      body: JSON.stringify({
-        sessionId: "c99f32",
-        location: "lib/supabase-schema.ts:getSchemaStatus",
-        message: "schema status missing",
-        data: {
-          hypothesisId: "H1-fix",
-          errorCode: error.code,
-          errorMessage: error.message,
-        },
-        timestamp: Date.now(),
-        runId: "post-fix",
-      }),
-    }).catch(() => {});
-    // #endregion
     return "missing";
   }
 
@@ -55,23 +36,6 @@ export async function getSchemaStatus(): Promise<"ready" | "missing"> {
   }
 
   cachedSchemaStatus = "ready";
-  // #region agent log
-  fetch("http://127.0.0.1:7480/ingest/76e8e424-2f5e-40c0-837a-cc42d78f81b4", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "c99f32",
-    },
-    body: JSON.stringify({
-      sessionId: "c99f32",
-      location: "lib/supabase-schema.ts:getSchemaStatus",
-      message: "schema status ready",
-      data: { hypothesisId: "H1-fix" },
-      timestamp: Date.now(),
-      runId: "post-fix",
-    }),
-  }).catch(() => {});
-  // #endregion
   return "ready";
 }
 

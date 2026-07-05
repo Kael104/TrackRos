@@ -6,7 +6,7 @@ import { HistoryCalendar } from "@/components/history/HistoryCalendar";
 import { HistoryDayDetail } from "@/components/history/HistoryDayDetail";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { SCHEMA_SETUP_MESSAGE } from "@/lib/supabase-schema";
+import { SCHEMA_SETUP_MESSAGE } from "@/lib/schema-messages";
 import { useHistoryStore } from "@/store/useHistoryStore";
 
 export default function CalendarPage() {

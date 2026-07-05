@@ -1,9 +1,9 @@
-    -- Trackros Supabase schema (single-user, permissive RLS)
+    -- Trackros Supabase schema (single-user, server-side access via service_role)
     -- Run this in Supabase Dashboard → SQL Editor after creating your project.
     --
     -- Setup checklist:
     -- 1. Create a project at https://supabase.com/dashboard
-    -- 2. Settings → API: copy Project URL and anon public key
+    -- 2. Settings → API: copy Project URL and service_role secret key (server-only)
     -- 3. Settings → General: note the Project Reference ID (for type generation)
     -- 4. Paste this entire file into SQL Editor and run
 
@@ -149,8 +149,8 @@
     where not exists (select 1 from public.user_goals limit 1);
 
 -- ---------------------------------------------------------------------------
--- Row Level Security (permissive single-user — tighten when auth is added)
--- Safe to re-run: drops existing policies before recreating them.
+-- Row Level Security (locked down — server uses service_role which bypasses RLS)
+-- Safe to re-run: drops all public policies. Anon/authenticated roles are denied.
 -- ---------------------------------------------------------------------------
 
 alter table public.foods enable row level security;
@@ -160,20 +160,13 @@ alter table public.meal_presets enable row level security;
 alter table public.meal_preset_items enable row level security;
 alter table public.user_goals enable row level security;
 
+-- Drop legacy permissive policies (anon + authenticated)
 drop policy if exists "foods_select_anon" on public.foods;
 drop policy if exists "foods_insert_anon" on public.foods;
 drop policy if exists "foods_update_anon" on public.foods;
 drop policy if exists "foods_select_authenticated" on public.foods;
 drop policy if exists "foods_insert_authenticated" on public.foods;
 drop policy if exists "foods_update_authenticated" on public.foods;
-
-create policy "foods_select_anon" on public.foods for select to anon using (true);
-create policy "foods_insert_anon" on public.foods for insert to anon with check (true);
-create policy "foods_update_anon" on public.foods for update to anon using (true) with check (true);
-
-create policy "foods_select_authenticated" on public.foods for select to authenticated using (true);
-create policy "foods_insert_authenticated" on public.foods for insert to authenticated with check (true);
-create policy "foods_update_authenticated" on public.foods for update to authenticated using (true) with check (true);
 
 drop policy if exists "daily_logs_select_anon" on public.daily_logs;
 drop policy if exists "daily_logs_insert_anon" on public.daily_logs;
@@ -184,16 +177,6 @@ drop policy if exists "daily_logs_insert_authenticated" on public.daily_logs;
 drop policy if exists "daily_logs_update_authenticated" on public.daily_logs;
 drop policy if exists "daily_logs_delete_authenticated" on public.daily_logs;
 
-create policy "daily_logs_select_anon" on public.daily_logs for select to anon using (true);
-create policy "daily_logs_insert_anon" on public.daily_logs for insert to anon with check (true);
-create policy "daily_logs_update_anon" on public.daily_logs for update to anon using (true) with check (true);
-create policy "daily_logs_delete_anon" on public.daily_logs for delete to anon using (true);
-
-create policy "daily_logs_select_authenticated" on public.daily_logs for select to authenticated using (true);
-create policy "daily_logs_insert_authenticated" on public.daily_logs for insert to authenticated with check (true);
-create policy "daily_logs_update_authenticated" on public.daily_logs for update to authenticated using (true) with check (true);
-create policy "daily_logs_delete_authenticated" on public.daily_logs for delete to authenticated using (true);
-
 drop policy if exists "log_entries_select_anon" on public.log_entries;
 drop policy if exists "log_entries_insert_anon" on public.log_entries;
 drop policy if exists "log_entries_update_anon" on public.log_entries;
@@ -202,16 +185,6 @@ drop policy if exists "log_entries_select_authenticated" on public.log_entries;
 drop policy if exists "log_entries_insert_authenticated" on public.log_entries;
 drop policy if exists "log_entries_update_authenticated" on public.log_entries;
 drop policy if exists "log_entries_delete_authenticated" on public.log_entries;
-
-create policy "log_entries_select_anon" on public.log_entries for select to anon using (true);
-create policy "log_entries_insert_anon" on public.log_entries for insert to anon with check (true);
-create policy "log_entries_update_anon" on public.log_entries for update to anon using (true) with check (true);
-create policy "log_entries_delete_anon" on public.log_entries for delete to anon using (true);
-
-create policy "log_entries_select_authenticated" on public.log_entries for select to authenticated using (true);
-create policy "log_entries_insert_authenticated" on public.log_entries for insert to authenticated with check (true);
-create policy "log_entries_update_authenticated" on public.log_entries for update to authenticated using (true) with check (true);
-create policy "log_entries_delete_authenticated" on public.log_entries for delete to authenticated using (true);
 
 drop policy if exists "meal_presets_select_anon" on public.meal_presets;
 drop policy if exists "meal_presets_insert_anon" on public.meal_presets;
@@ -222,16 +195,6 @@ drop policy if exists "meal_presets_insert_authenticated" on public.meal_presets
 drop policy if exists "meal_presets_update_authenticated" on public.meal_presets;
 drop policy if exists "meal_presets_delete_authenticated" on public.meal_presets;
 
-create policy "meal_presets_select_anon" on public.meal_presets for select to anon using (true);
-create policy "meal_presets_insert_anon" on public.meal_presets for insert to anon with check (true);
-create policy "meal_presets_update_anon" on public.meal_presets for update to anon using (true) with check (true);
-create policy "meal_presets_delete_anon" on public.meal_presets for delete to anon using (true);
-
-create policy "meal_presets_select_authenticated" on public.meal_presets for select to authenticated using (true);
-create policy "meal_presets_insert_authenticated" on public.meal_presets for insert to authenticated with check (true);
-create policy "meal_presets_update_authenticated" on public.meal_presets for update to authenticated using (true) with check (true);
-create policy "meal_presets_delete_authenticated" on public.meal_presets for delete to authenticated using (true);
-
 drop policy if exists "meal_preset_items_select_anon" on public.meal_preset_items;
 drop policy if exists "meal_preset_items_insert_anon" on public.meal_preset_items;
 drop policy if exists "meal_preset_items_update_anon" on public.meal_preset_items;
@@ -241,23 +204,77 @@ drop policy if exists "meal_preset_items_insert_authenticated" on public.meal_pr
 drop policy if exists "meal_preset_items_update_authenticated" on public.meal_preset_items;
 drop policy if exists "meal_preset_items_delete_authenticated" on public.meal_preset_items;
 
-create policy "meal_preset_items_select_anon" on public.meal_preset_items for select to anon using (true);
-create policy "meal_preset_items_insert_anon" on public.meal_preset_items for insert to anon with check (true);
-create policy "meal_preset_items_update_anon" on public.meal_preset_items for update to anon using (true) with check (true);
-create policy "meal_preset_items_delete_anon" on public.meal_preset_items for delete to anon using (true);
-
-create policy "meal_preset_items_select_authenticated" on public.meal_preset_items for select to authenticated using (true);
-create policy "meal_preset_items_insert_authenticated" on public.meal_preset_items for insert to authenticated with check (true);
-create policy "meal_preset_items_update_authenticated" on public.meal_preset_items for update to authenticated using (true) with check (true);
-create policy "meal_preset_items_delete_authenticated" on public.meal_preset_items for delete to authenticated using (true);
-
 drop policy if exists "user_goals_select_anon" on public.user_goals;
 drop policy if exists "user_goals_update_anon" on public.user_goals;
 drop policy if exists "user_goals_select_authenticated" on public.user_goals;
 drop policy if exists "user_goals_update_authenticated" on public.user_goals;
 
-create policy "user_goals_select_anon" on public.user_goals for select to anon using (true);
-create policy "user_goals_update_anon" on public.user_goals for update to anon using (true) with check (true);
+-- No public policies: anon and authenticated roles cannot access tables.
+-- The Next.js server uses SUPABASE_SERVICE_ROLE_KEY which bypasses RLS.
 
-create policy "user_goals_select_authenticated" on public.user_goals for select to authenticated using (true);
-create policy "user_goals_update_authenticated" on public.user_goals for update to authenticated using (true) with check (true);
+-- ---------------------------------------------------------------------------
+-- Data integrity constraints (safe to re-run)
+-- ---------------------------------------------------------------------------
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'foods_serving_size_positive') then
+    alter table public.foods add constraint foods_serving_size_positive check (serving_size > 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'foods_calories_non_negative') then
+    alter table public.foods add constraint foods_calories_non_negative check (calories >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'foods_protein_non_negative') then
+    alter table public.foods add constraint foods_protein_non_negative check (protein >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'foods_carbs_non_negative') then
+    alter table public.foods add constraint foods_carbs_non_negative check (carbs >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'foods_fat_non_negative') then
+    alter table public.foods add constraint foods_fat_non_negative check (fat >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'foods_fiber_non_negative') then
+    alter table public.foods add constraint foods_fiber_non_negative check (fiber is null or fiber >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'foods_sugar_non_negative') then
+    alter table public.foods add constraint foods_sugar_non_negative check (sugar is null or sugar >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'foods_sodium_non_negative') then
+    alter table public.foods add constraint foods_sodium_non_negative check (sodium is null or sodium >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'log_entries_servings_positive') then
+    alter table public.log_entries add constraint log_entries_servings_positive check (servings > 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'meal_preset_items_servings_positive') then
+    alter table public.meal_preset_items add constraint meal_preset_items_servings_positive check (servings > 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'user_goals_age_range') then
+    alter table public.user_goals add constraint user_goals_age_range check (age >= 1 and age <= 120);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'user_goals_calories_non_negative') then
+    alter table public.user_goals add constraint user_goals_calories_non_negative check (calories >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'user_goals_protein_non_negative') then
+    alter table public.user_goals add constraint user_goals_protein_non_negative check (protein_g >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'user_goals_carbs_non_negative') then
+    alter table public.user_goals add constraint user_goals_carbs_non_negative check (carbs_g >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'user_goals_fat_non_negative') then
+    alter table public.user_goals add constraint user_goals_fat_non_negative check (fat_g >= 0);
+  end if;
+end $$;

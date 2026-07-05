@@ -1,8 +1,13 @@
 import { create } from "zustand";
 
 import { buildCalendarDays, getMonthBounds } from "@/lib/format-date";
-import { getRangeDayData, type DayData } from "@/lib/supabase-queries";
-import { getSchemaStatus } from "@/lib/supabase-schema";
+import type { DayData } from "@/lib/day-data";
+import {
+  fetchHistorySchemaStatus,
+  fetchRangeDayData,
+} from "@/app/actions/history";
+
+export type { DayData };
 
 export interface MonthRef {
   year: number;
@@ -45,13 +50,13 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     });
 
     try {
-      const schemaStatus = await getSchemaStatus();
+      const schemaStatus = await fetchHistorySchemaStatus();
       const calendarDays = buildCalendarDays(year, month);
       const startIso = calendarDays[0]?.iso ?? getMonthBounds(year, month).startIso;
       const endIso =
         calendarDays[calendarDays.length - 1]?.iso ??
         getMonthBounds(year, month).endIso;
-      const daysData = await getRangeDayData(startIso, endIso);
+      const daysData = await fetchRangeDayData(startIso, endIso);
 
       set({
         daysData,

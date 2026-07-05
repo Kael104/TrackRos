@@ -13,7 +13,14 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
           <h1 className="text-xl font-semibold text-neutral-900">
             Something went wrong
           </h1>
-          <p className="mt-2 text-sm text-neutral-600">{error.message}</p>
+          <p className="mt-2 text-sm text-neutral-600">
+            An unexpected error occurred. Please try again.
+          </p>
+          {error.digest ? (
+            <p className="mt-2 font-mono text-xs text-neutral-500">
+              Reference: {error.digest}
+            </p>
+          ) : null}
           <button
             type="button"
             onClick={reset}
