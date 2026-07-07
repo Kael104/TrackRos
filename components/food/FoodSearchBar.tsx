@@ -28,6 +28,7 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
   const [selectedMeal, setSelectedMeal] = useState<MealType>("breakfast");
   const [mealOpen, setMealOpen] = useState(false);
   const [added, setAdded] = useState(false);
+  const [price, setPrice] = useState("");
   const suggestRef = useRef<HTMLDivElement>(null);
   const mealDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +39,7 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
 
   useEffect(() => {
     setAdded(false);
+    setPrice("");
   }, [result]);
 
   useEffect(() => {
@@ -301,6 +303,8 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
               { label: "Carbs", value: result.scaledNutrients.carbs, unit: "g" },
               { label: "Fat", value: result.scaledNutrients.fat, unit: "g" },
               { label: "Fiber", value: result.scaledNutrients.fiber, unit: "g" },
+              { label: "Sugar", value: result.scaledNutrients.sugar, unit: "g" },
+              { label: "Sodium", value: result.scaledNutrients.sodium, unit: "mg" },
             ].map(({ label, value, unit }) => (
               <div key={label} className="rounded-lg bg-neutral-50 px-3 py-2">
                 <dt className="text-xs text-text-muted">{label}</dt>
@@ -310,6 +314,23 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
               </div>
             ))}
           </dl>
+
+          <div className="mt-4">
+            <label htmlFor="food-price" className="text-xs text-text-muted">
+              Price (optional)
+            </label>
+            <input
+              id="food-price"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="0.00"
+              className="mt-1 block w-full rounded-lg border border-border bg-neutral-50 px-3 py-2 font-mono text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:w-40"
+            />
+          </div>
 
           {onAddToDashboard && (
             <button
