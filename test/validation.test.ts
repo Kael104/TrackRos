@@ -56,6 +56,9 @@ const validFoodSearchResponse = {
   quantity: 1,
   unit: null,
   servingLabel: "medium banana",
+  countMode: null,
+  piecesPerServing: 1,
+  supportsCountModeChoice: false,
   cached: true,
 };
 

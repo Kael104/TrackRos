@@ -1,10 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CountModeToggle } from "@/components/food/CountModeToggle";
+import { buildFinalizedSearchResponse } from "@/lib/build-food-search-response";
 import type { FoodRecord, FoodSearchResponse } from "@/lib/food-search-types";
 import { MEAL_CONFIG, type MealType } from "@/lib/meals";
 import { parseFoodInput } from "@/lib/parse-food-input";
-import { formatAddQuantityLabel } from "@/lib/serving-units";
+import {
+  defaultCountMode,
+  formatAddQuantityLabel,
+  type CountMode,
+} from "@/lib/serving-units";
 
 interface FoodSearchBarProps {
   onResult?: (result: FoodSearchResponse) => void;
@@ -16,6 +22,13 @@ interface FoodSearchBarProps {
 
 const MEAL_TYPES = Object.keys(MEAL_CONFIG) as MealType[];
 
+interface SearchBase {
+  food: FoodRecord;
+  quantity: number;
+  unit: string | null;
+  cached: boolean;
+}
+
 export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -24,7 +37,8 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<FoodSearchResponse | null>(null);
+  const [searchBase, setSearchBase] = useState<SearchBase | null>(null);
+  const [countMode, setCountMode] = useState<CountMode>("piece");
   const [selectedMeal, setSelectedMeal] = useState<MealType>("breakfast");
   const [mealOpen, setMealOpen] = useState(false);
   const [added, setAdded] = useState(false);
@@ -40,7 +54,25 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
   useEffect(() => {
     setAdded(false);
     setPrice("");
-  }, [result]);
+  }, [searchBase, countMode]);
+
+  const result = useMemo<FoodSearchResponse | null>(() => {
+    if (!searchBase) return null;
+    return buildFinalizedSearchResponse(
+      searchBase.food,
+      searchBase.quantity,
+      searchBase.unit,
+      searchBase.cached,
+      countMode,
+      searchBase.food.piecesPerServing,
+    );
+  }, [searchBase, countMode]);
+
+  useEffect(() => {
+    if (result) {
+      onResult?.(result);
+    }
+  }, [result, onResult]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -94,7 +126,7 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
   const runSearch = useCallback(
     async (q: string, foodId?: number) => {
       if (!q) {
-        setResult(null);
+        setSearchBase(null);
         setError(null);
         return;
       }
@@ -113,26 +145,34 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
         const data = await res.json();
 
         if (!res.ok) {
-          setResult(null);
+          setSearchBase(null);
           setError(data.error ?? "Search failed");
           return;
         }
 
         const searchResult = data as FoodSearchResponse;
-        setResult(searchResult);
-        onResult?.(searchResult);
+        const { quantity, unit } = parseFoodInput(q);
+        setSearchBase({
+          food: searchResult.food,
+          quantity,
+          unit,
+          cached: searchResult.cached,
+        });
+        setCountMode(
+          searchResult.countMode ?? defaultCountMode(searchResult.food.servingUnit),
+        );
       } catch {
-        setResult(null);
+        setSearchBase(null);
         setError("Could not reach the food search API");
       } finally {
         setLoading(false);
       }
     },
-    [onResult],
+    [],
   );
 
   useEffect(() => {
-    setResult(null);
+    setSearchBase(null);
     setError(null);
     void fetchSuggestions(debouncedQuery);
   }, [debouncedQuery, fetchSuggestions]);
@@ -297,7 +337,19 @@ export function FoodSearchBar({ onResult, onAddToDashboard }: FoodSearchBarProps
             </span>
           </div>
 
+          {result.supportsCountModeChoice && result.countMode && (
+            <CountModeToggle
+              value={result.countMode}
+              piecesPerServing={result.piecesPerServing}
+              onChange={setCountMode}
+            />
+          )}
+
           <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <p className="col-span-full text-xs font-medium text-text-muted">
+              Nutrients per{" "}
+              {formatAddQuantityLabel(result.quantity, result.servingLabel)}
+            </p>
             {[
               { label: "Protein", value: result.scaledNutrients.protein, unit: "g" },
               { label: "Carbs", value: result.scaledNutrients.carbs, unit: "g" },

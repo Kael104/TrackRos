@@ -19,6 +19,8 @@ export interface FoodRecord {
   name: string;
   servingSize: number;
   servingUnit: string;
+  /** Typical pieces in one serving order; used for piece/serving toggle. */
+  piecesPerServing?: number | null;
   calories: number;
   protein: number;
   carbs: number;
@@ -43,6 +45,9 @@ export interface FoodSearchResponse {
   unit: string | null;
   /** Human-readable portion label stored on the log entry (e.g. "medium banana"). */
   servingLabel: string;
+  countMode: "piece" | "serving" | null;
+  piecesPerServing: number;
+  supportsCountModeChoice: boolean;
   cached: boolean;
 }
 

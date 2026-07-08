@@ -1,6 +1,7 @@
 import { formatFoodNameForStorage } from "@/lib/format-food-name";
 import type { FoodNutrients } from "@/lib/gemini";
 import type { FoodRecord } from "@/lib/food-search-types";
+import { inferPiecesPerServing } from "@/lib/serving-units";
 import type { FoodRow } from "@/types/database.types";
 
 /** Nutrient fields stored per food serving (used for scaling). */
@@ -48,6 +49,7 @@ export function foodRowToRecord(row: FoodRow): FoodRecord {
     name: row.name,
     servingSize: row.serving_size,
     servingUnit: row.serving_unit,
+    piecesPerServing: inferPiecesPerServing(row.serving_unit),
     calories: row.calories,
     protein: row.protein,
     carbs: row.carbs,

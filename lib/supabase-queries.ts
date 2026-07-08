@@ -825,6 +825,82 @@ export async function createBuiltMeal(
   return createMealPreset(name, mealType, presetItems);
 }
 
+export async function updateBuiltMeal(
+  id: number,
+  name: string,
+  items: BuiltMealItemInput[],
+): Promise<MealPreset> {
+  if (!items.length) {
+    throw new Error("A meal must include at least one item.");
+  }
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("meal_presets")
+    .select("id, meal_type")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (fetchError) {
+    sanitizeDbError(fetchError, "updateBuiltMeal/fetch");
+  }
+
+  if (!existing) {
+    throw new Error("Meal preset not found.");
+  }
+
+  const presetItems: MealPresetItemInput[] = [];
+
+  for (const item of items) {
+    const persisted = await persistFoodRecord(item.food);
+    presetItems.push({
+      foodId: persisted.id,
+      servings: item.quantity,
+      servingLabel: item.unit ?? item.food.servingUnit,
+    });
+  }
+
+  const { error: presetError } = await supabase
+    .from("meal_presets")
+    .update({ name, meal_type: existing.meal_type })
+    .eq("id", id);
+
+  if (presetError) {
+    sanitizeDbError(presetError, "updateBuiltMeal/preset");
+  }
+
+  const { error: deleteError } = await supabase
+    .from("meal_preset_items")
+    .delete()
+    .eq("preset_id", id);
+
+  if (deleteError) {
+    sanitizeDbError(deleteError, "updateBuiltMeal/deleteItems");
+  }
+
+  const itemRows = presetItems.map((item) => ({
+    preset_id: id,
+    food_id: item.foodId,
+    servings: item.servings,
+    serving_label: item.servingLabel,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from("meal_preset_items")
+    .insert(itemRows);
+
+  if (itemsError) {
+    sanitizeDbError(itemsError, "updateBuiltMeal/insertItems");
+  }
+
+  const presets = await getMealPresets();
+  const updated = presets.find((p) => p.id === id);
+  if (!updated) {
+    throw new Error("Failed to load updated preset.");
+  }
+
+  return updated;
+}
+
 type RecentLogEntryRow = {
   food_id: number;
   servings: number;

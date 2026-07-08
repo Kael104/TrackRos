@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
         name: insert.name,
         servingSize: insert.serving_size,
         servingUnit: insert.serving_unit,
+        piecesPerServing: nutrients.piecesPerServing,
         calories: insert.calories,
         protein: insert.protein,
         carbs: insert.carbs,

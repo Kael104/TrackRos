@@ -5,6 +5,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 export interface FoodNutrients {
   servingSize: number;
   servingUnit: string;
+  /** Typical pieces in one order/serving for countable foods. */
+  piecesPerServing?: number | null;
   calories: number;
   protein: number;
   carbs: number;
@@ -30,7 +32,17 @@ const REQUIRED_FIELDS: (keyof FoodNutrients)[] = [
 ];
 
 function buildPrompt(foodName: string): string {
-  return `Return a JSON object with the nutritional values for one standard medium serving of ${foodName}. Use servingSize: 1 and servingUnit: a descriptive portion name such as "medium banana" or "1 cup" — not bare "g" or "grams" unless the food is only ever measured by weight. All nutrient values must be for that entire one medium serving. Fields: servingSize (number), servingUnit (string), calories, protein, carbs, fat, fiber, sugar, sodium, saturatedFat, transFat, cholesterol, potassium, calcium, iron. All nutrient values in grams or milligrams as appropriate. Return only valid JSON, no markdown.`;
+  return `Return a JSON object with nutritional values for ${foodName}.
+
+First classify the food:
+- Individual/countable items (siomai, dumpling, egg, nugget, cookie, bread slice, hotdog, etc.): return nutrients for EXACTLY ONE PIECE. Use servingSize: 1 and servingUnit: "piece" (or a natural single-unit noun like "slice" if more accurate). Never aggregate multiple pieces into one entry.
+- Dishes/viands/portions (adobo, sinigang, fried rice, stew, soup by bowl): return nutrients for ONE standard single serving. Use servingSize: 1 and servingUnit: a descriptive portion like "serving", "cup", or "bowl".
+
+All nutrient values must be for that single unit only (1 piece OR 1 serving). Always use servingSize: 1.
+
+Also include piecesPerServing (number): for individual/countable items, the typical number of pieces in one order or serving (e.g. siomai: 6, nuggets: 6). For dishes/viands use 1.
+
+Fields: servingSize (number), servingUnit (string), piecesPerServing (number), calories, protein, carbs, fat, fiber, sugar, sodium, saturatedFat, transFat, cholesterol, potassium, calcium, iron. All nutrient values in grams or milligrams as appropriate. Return only valid JSON, no markdown.`;
 }
 
 function isGramUnit(unit: string): boolean {
@@ -38,33 +50,54 @@ function isGramUnit(unit: string): boolean {
   return lower === "g" || lower === "gram" || lower === "grams";
 }
 
-/** Store nutrients as one medium portion (servingSize 1) with a descriptive unit. */
+function scaleOptional(value: number | null, factor: number): number | null {
+  if (value === null) return null;
+  return value * factor;
+}
+
+/** Scale nutrient totals down when Gemini returned a multi-unit servingSize. */
+function scaleNutrientsToSingleUnit(nutrients: FoodNutrients): FoodNutrients {
+  if (nutrients.servingSize === 1) {
+    return nutrients;
+  }
+
+  const factor = 1 / nutrients.servingSize;
+
+  return {
+    ...nutrients,
+    servingSize: 1,
+    calories: nutrients.calories * factor,
+    protein: nutrients.protein * factor,
+    carbs: nutrients.carbs * factor,
+    fat: nutrients.fat * factor,
+    fiber: scaleOptional(nutrients.fiber, factor),
+    sugar: scaleOptional(nutrients.sugar, factor),
+    sodium: scaleOptional(nutrients.sodium, factor),
+    saturatedFat: scaleOptional(nutrients.saturatedFat, factor),
+    transFat: scaleOptional(nutrients.transFat, factor),
+    cholesterol: scaleOptional(nutrients.cholesterol, factor),
+    potassium: scaleOptional(nutrients.potassium, factor),
+    calcium: scaleOptional(nutrients.calcium, factor),
+    iron: scaleOptional(nutrients.iron, factor),
+  };
+}
+
+/** Store nutrients as one unit (servingSize 1) with a descriptive servingUnit. */
 function normalizeToMediumServing(
   nutrients: FoodNutrients,
   foodName: string,
 ): FoodNutrients {
-  if (isGramUnit(nutrients.servingUnit) && nutrients.servingSize > 1) {
-    return {
-      ...nutrients,
-      servingSize: 1,
-      servingUnit: `medium ${foodName}`,
-    };
-  }
-
   if (isGramUnit(nutrients.servingUnit)) {
+    const scaled = scaleNutrientsToSingleUnit(nutrients);
     return {
-      ...nutrients,
+      ...scaled,
       servingSize: 1,
       servingUnit: `medium ${foodName}`,
     };
   }
 
   if (nutrients.servingSize !== 1) {
-    return {
-      ...nutrients,
-      servingSize: 1,
-      servingUnit: nutrients.servingUnit || `medium ${foodName}`,
-    };
+    return scaleNutrientsToSingleUnit(nutrients);
   }
 
   return nutrients;
@@ -113,6 +146,7 @@ function validateFoodNutrients(data: unknown): FoodNutrients {
   return {
     servingSize,
     servingUnit,
+    piecesPerServing: parseOptionalNumber(record.piecesPerServing),
     calories: Number(record.calories),
     protein: Number(record.protein),
     carbs: Number(record.carbs),

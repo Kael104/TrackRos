@@ -1,5 +1,8 @@
 import type { FoodNutrientRecord } from "@/lib/food-mapper";
-import { computeScaleMultiplier } from "@/lib/serving-units";
+import {
+  computeScaleMultiplier,
+  type CountMode,
+} from "@/lib/serving-units";
 
 export interface ScaledNutrients {
   calories: number;
@@ -30,12 +33,16 @@ export function scaleNutrients(
   food: FoodNutrientRecord,
   quantity: number,
   unit?: string | null,
+  countMode?: CountMode | null,
+  piecesPerServing = 1,
 ): ScaledNutrients {
   const multiplier = computeScaleMultiplier(
     food.servingSize,
     food.servingUnit,
     quantity,
     unit,
+    countMode,
+    piecesPerServing,
   );
 
   return {

@@ -33,6 +33,7 @@ import {
   saveBuiltMeal,
   saveMealPreset,
   saveMealPresetFromDay,
+  updateBuiltMeal as updateBuiltMealAction,
 } from "@/app/actions/dashboard";
 
 interface DashboardStore {
@@ -67,6 +68,11 @@ interface DashboardStore {
   saveBuiltMeal: (
     name: string,
     mealType: MealType,
+    items: BuiltMealItemInput[],
+  ) => Promise<void>;
+  updateBuiltMeal: (
+    id: number,
+    name: string,
     items: BuiltMealItemInput[],
   ) => Promise<void>;
   savePresetFromDay: (
@@ -334,6 +340,22 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to save meal";
+      set({ error: message });
+      throw error;
+    }
+  },
+
+  updateBuiltMeal: async (id, name, items) => {
+    set({ error: null });
+
+    try {
+      const preset = await updateBuiltMealAction(id, name, items);
+      set((state) => ({
+        presets: state.presets.map((p) => (p.id === preset.id ? preset : p)),
+      }));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update meal";
       set({ error: message });
       throw error;
     }

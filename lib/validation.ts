@@ -51,6 +51,7 @@ export const foodRecordSchema = z.object({
   name: z.string().trim().min(1).max(MAX_NAME_LENGTH),
   servingSize: z.number().finite().gt(0).max(MAX_SERVINGS),
   servingUnit: z.string().trim().min(1).max(MAX_SERVING_LABEL_LENGTH),
+  piecesPerServing: z.number().finite().gt(0).max(MAX_SERVINGS).nullable().optional(),
   calories: nonNegNutrientSchema,
   protein: nonNegNutrientSchema,
   carbs: nonNegNutrientSchema,
@@ -90,6 +91,9 @@ export const foodSearchResponseSchema = z.object({
   quantity: servingsSchema,
   unit: z.string().trim().max(MAX_SERVING_LABEL_LENGTH).nullable(),
   servingLabel: z.string().trim().min(1).max(MAX_SERVING_LABEL_LENGTH),
+  countMode: z.enum(["piece", "serving"]).nullable(),
+  piecesPerServing: z.number().finite().gt(0).max(MAX_SERVINGS),
+  supportsCountModeChoice: z.boolean(),
   cached: z.boolean(),
 }) satisfies z.ZodType<FoodSearchResponse>;
 

@@ -22,6 +22,7 @@ import {
   getDayData,
   getMealPresets,
   getRecentFoods,
+  updateBuiltMeal as updateBuiltMealQuery,
   updateLogEntryDisplayName,
 } from "@/lib/supabase-queries";
 import {
@@ -105,6 +106,18 @@ export async function saveBuiltMeal(
   return createBuiltMeal(
     parseOrThrow(presetNameSchema, name),
     parseOrThrow(mealTypeSchema, mealType),
+    parseOrThrow(builtMealItemsSchema, items),
+  );
+}
+
+export async function updateBuiltMeal(
+  id: number,
+  name: string,
+  items: BuiltMealItemInput[],
+) {
+  return updateBuiltMealQuery(
+    parseOrThrow(positiveIntIdSchema, id),
+    parseOrThrow(presetNameSchema, name),
     parseOrThrow(builtMealItemsSchema, items),
   );
 }
