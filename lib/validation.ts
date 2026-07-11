@@ -2,6 +2,7 @@ import { isValid, parseISO } from "date-fns";
 import { z } from "zod";
 
 import type { FoodSearchResponse } from "@/lib/food-search-types";
+import type { FoodNutrients } from "@/lib/gemini";
 import type { MealType } from "@/lib/meals";
 import type {
   BuiltMealItemInput,
@@ -177,6 +178,34 @@ export const foodSuggestQuerySchema = z
   .max(MAX_FOOD_QUERY_LENGTH, "Query is too long");
 
 export const foodIdParamSchema = positiveIntIdSchema;
+
+export const foodNutrientsInputSchema = z.object({
+  servingSize: z.number().finite().gt(0).max(MAX_SERVINGS),
+  servingUnit: z.string().trim().min(1).max(MAX_SERVING_LABEL_LENGTH),
+  calories: nonNegNutrientSchema,
+  protein: nonNegNutrientSchema,
+  carbs: nonNegNutrientSchema,
+  fat: nonNegNutrientSchema,
+  fiber: optionalNonNegNutrientSchema,
+  sugar: optionalNonNegNutrientSchema,
+  sodium: optionalNonNegNutrientSchema,
+  saturatedFat: optionalNonNegNutrientSchema,
+  transFat: optionalNonNegNutrientSchema,
+  cholesterol: optionalNonNegNutrientSchema,
+  potassium: optionalNonNegNutrientSchema,
+  calcium: optionalNonNegNutrientSchema,
+  iron: optionalNonNegNutrientSchema,
+}) satisfies z.ZodType<FoodNutrients>;
+
+export const createCachedFoodSchema = z.object({
+  name: presetNameSchema,
+  nutrients: foodNutrientsInputSchema,
+});
+
+export const updateCachedFoodSchema = z.object({
+  foodId: positiveIntIdSchema,
+  nutrients: foodNutrientsInputSchema,
+});
 
 export const dateRangeSchema = z
   .object({

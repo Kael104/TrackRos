@@ -42,11 +42,12 @@
     create table if not exists public.log_entries (
       id bigint generated always as identity primary key,
       log_id bigint not null references public.daily_logs (id) on delete cascade,
-      food_id bigint not null references public.foods (id) on delete restrict,
+      food_id bigint references public.foods (id) on delete set null,
       meal_type text not null check (meal_type in ('breakfast', 'lunch', 'dinner', 'snacks')),
       servings double precision not null default 1,
       serving_label text,
       display_name text,
+      nutrients_snapshot jsonb,
       created_at timestamptz not null default now()
     );
 
@@ -98,6 +99,37 @@
     alter table public.user_goals add constraint user_goals_gender_check check (gender in ('male', 'female'));
 
     alter table public.log_entries add column if not exists display_name text;
+    alter table public.log_entries add column if not exists nutrients_snapshot jsonb;
+
+    -- Allow log entries to survive food deletion; nutrients are frozen in nutrients_snapshot.
+    alter table public.log_entries drop constraint if exists log_entries_food_id_fkey;
+    alter table public.log_entries alter column food_id drop not null;
+    alter table public.log_entries
+      add constraint log_entries_food_id_fkey
+      foreign key (food_id) references public.foods (id) on delete set null;
+
+    -- Freeze existing log history at current food nutrient values.
+    update public.log_entries le
+    set nutrients_snapshot = jsonb_build_object(
+      'servingSize', f.serving_size,
+      'servingUnit', f.serving_unit,
+      'calories', f.calories,
+      'protein', f.protein,
+      'carbs', f.carbs,
+      'fat', f.fat,
+      'fiber', f.fiber,
+      'sugar', f.sugar,
+      'sodium', f.sodium,
+      'saturatedFat', f.saturated_fat,
+      'transFat', f.trans_fat,
+      'cholesterol', f.cholesterol,
+      'potassium', f.potassium,
+      'calcium', f.calcium,
+      'iron', f.iron
+    )
+    from public.foods f
+    where le.food_id = f.id
+      and le.nutrients_snapshot is null;
 
     -- Capitalize existing food names (sentence case). Safe to re-run.
     do $$

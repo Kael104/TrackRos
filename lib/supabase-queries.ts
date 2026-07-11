@@ -7,7 +7,10 @@ import {
   foodRowToNutrientRecord,
   foodRowToRecord,
   foodRecordToNutrients,
+  nutrientRecordToSnapshot,
   nutrientsToFoodInsert,
+  snapshotToNutrientRecord,
+  type FoodNutrientRecord,
 } from "@/lib/food-mapper";
 import { normalizeFoodNameForLookup } from "@/lib/format-food-name";
 import type { FoodNutrients } from "@/lib/gemini";
@@ -33,7 +36,7 @@ import type { DayData } from "@/lib/day-data";
 import { getPresetsSchemaStatus, getSchemaStatus, isMissingTableError, SCHEMA_SETUP_MESSAGE } from "@/lib/supabase-schema";
 import { sanitizeDbError } from "@/lib/db-errors";
 import { supabase } from "@/lib/supabase-server";
-import type { FoodRow, UserGoalsRow } from "@/types/database.types";
+import type { FoodRow, Json, UserGoalsRow } from "@/types/database.types";
 
 const MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner", "snacks"];
 
@@ -162,6 +165,21 @@ function fillRangeWithEmpty(
   return result;
 }
 
+function resolveEntryNutrientSource(
+  raw: LogEntryWithFood,
+): FoodNutrientRecord | null {
+  const fromSnapshot = snapshotToNutrientRecord(raw.nutrients_snapshot);
+  if (fromSnapshot) {
+    return fromSnapshot;
+  }
+
+  if (raw.foods) {
+    return foodRowToNutrientRecord(raw.foods);
+  }
+
+  return null;
+}
+
 function aggregateEntriesIntoDayData(
   entries: LogEntryWithFood[],
   base: DayData,
@@ -169,20 +187,23 @@ function aggregateEntriesIntoDayData(
   let dayData = cloneDayData(base);
 
   for (const raw of entries) {
-    const food = raw.foods;
-    if (!food) continue;
+    const nutrientSource = resolveEntryNutrientSource(raw);
+    if (!nutrientSource) {
+      continue;
+    }
 
     const scaled = scaleNutrients(
-      foodRowToNutrientRecord(food),
+      nutrientSource,
       raw.servings,
       raw.serving_label,
     );
     const logEntry = buildLogEntry(
       raw.id,
-      food,
+      nutrientSource,
+      raw.display_name?.trim() || raw.foods?.name || "Unknown food",
       raw.servings,
       raw.serving_label,
-      raw.display_name,
+      raw.foods?.serving_unit,
     );
 
     dayData = {
@@ -199,22 +220,23 @@ function aggregateEntriesIntoDayData(
 
 function buildLogEntry(
   entryId: number,
-  food: FoodRow,
+  nutrientSource: FoodNutrientRecord,
+  foodName: string,
   servings: number,
   servingLabel: string | null,
-  displayName?: string | null,
+  fallbackServingUnit?: string | null,
 ): LogEntry {
   const scaled = scaleNutrients(
-    foodRowToNutrientRecord(food),
+    nutrientSource,
     servings,
     servingLabel,
   );
 
   return {
     id: String(entryId),
-    foodName: displayName?.trim() || food.name,
+    foodName,
     servings,
-    servingLabel: servingLabel ?? food.serving_unit,
+    servingLabel: servingLabel ?? fallbackServingUnit ?? nutrientSource.servingUnit,
     calories: Math.round(scaled.calories),
     protein: scaled.protein,
     carbs: scaled.carbs,
@@ -348,6 +370,99 @@ export async function searchFoodsByName(
   return data ?? [];
 }
 
+export async function getAllCachedFoods(): Promise<FoodRecord[]> {
+  if ((await getSchemaStatus()) === "missing") {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("foods")
+    .select("*")
+    .order("name");
+
+  if (error) {
+    sanitizeDbError(error, "getAllCachedFoods");
+  }
+
+  return (data ?? []).map(foodRowToRecord);
+}
+
+function foodNutrientsToRowUpdate(nutrients: FoodNutrients) {
+  return {
+    serving_size: nutrients.servingSize,
+    serving_unit: nutrients.servingUnit,
+    calories: nutrients.calories,
+    protein: nutrients.protein,
+    carbs: nutrients.carbs,
+    fat: nutrients.fat,
+    fiber: nutrients.fiber,
+    sugar: nutrients.sugar,
+    sodium: nutrients.sodium,
+    saturated_fat: nutrients.saturatedFat,
+    trans_fat: nutrients.transFat,
+    cholesterol: nutrients.cholesterol,
+    potassium: nutrients.potassium,
+    calcium: nutrients.calcium,
+    iron: nutrients.iron,
+  };
+}
+
+export async function createCachedFood(
+  name: string,
+  nutrients: FoodNutrients,
+): Promise<FoodRecord> {
+  const food = await insertFood(name, nutrients, "manual");
+  return foodRowToRecord(food);
+}
+
+export async function updateCachedFoodNutrients(
+  foodId: number,
+  nutrients: FoodNutrients,
+): Promise<FoodRecord> {
+  const existing = await findFoodById(foodId);
+  if (!existing) {
+    throw new Error("Food not found");
+  }
+
+  const { data, error } = await supabase
+    .from("foods")
+    .update(foodNutrientsToRowUpdate(nutrients))
+    .eq("id", foodId)
+    .select("*")
+    .single();
+
+  if (error) {
+    sanitizeDbError(error, "updateCachedFoodNutrients/foods");
+  }
+
+  const snapshot = nutrientRecordToSnapshot(foodRowToNutrientRecord(data));
+  const todayIso = format(new Date(), "yyyy-MM-dd");
+
+  const { data: dailyLog, error: dailyLogError } = await supabase
+    .from("daily_logs")
+    .select("id")
+    .eq("log_date", todayIso)
+    .maybeSingle();
+
+  if (dailyLogError) {
+    sanitizeDbError(dailyLogError, "updateCachedFoodNutrients/dailyLog");
+  }
+
+  if (dailyLog) {
+    const { error: snapshotError } = await supabase
+      .from("log_entries")
+      .update({ nutrients_snapshot: snapshot })
+      .eq("food_id", foodId)
+      .eq("log_id", dailyLog.id);
+
+    if (snapshotError) {
+      sanitizeDbError(snapshotError, "updateCachedFoodNutrients/snapshots");
+    }
+  }
+
+  return foodRowToRecord(data);
+}
+
 export async function insertFood(
   name: string,
   nutrients: FoodNutrients,
@@ -475,13 +590,14 @@ export async function updateGoals(
 type LogEntryWithFood = {
   id: number;
   log_id: number;
-  food_id: number;
+  food_id: number | null;
   meal_type: MealType;
   servings: number;
   serving_label: string | null;
   display_name: string | null;
+  nutrients_snapshot: Json | null;
   created_at: string;
-  foods: FoodRow;
+  foods: FoodRow | null;
 };
 
 export async function getDayData(logDate: string): Promise<DayData> {
@@ -626,6 +742,10 @@ export async function addLogEntry(
     foodRow = food;
   }
 
+  const nutrientSnapshot = nutrientRecordToSnapshot(
+    foodRowToNutrientRecord(foodRow),
+  );
+
   const { data, error } = await supabase
     .from("log_entries")
     .insert({
@@ -634,6 +754,7 @@ export async function addLogEntry(
       meal_type: mealType,
       servings: result.quantity,
       serving_label: result.servingLabel,
+      nutrients_snapshot: nutrientSnapshot,
     })
     .select("id")
     .single();
@@ -644,22 +765,15 @@ export async function addLogEntry(
 
   return buildLogEntry(
     data.id,
-    foodRow,
+    foodRowToNutrientRecord(foodRow),
+    result.food.name,
     result.quantity,
     result.servingLabel,
+    foodRow.serving_unit,
   );
 }
 
 export async function deleteCachedFood(foodId: number): Promise<void> {
-  const { error: logError } = await supabase
-    .from("log_entries")
-    .delete()
-    .eq("food_id", foodId);
-
-  if (logError) {
-    sanitizeDbError(logError, "deleteCachedFood/logEntries");
-  }
-
   const { error: presetItemsError } = await supabase
     .from("meal_preset_items")
     .delete()
@@ -1137,14 +1251,24 @@ export async function createMealPresetFromDay(
     throw new Error(`No ${mealType} items logged on ${logDate}.`);
   }
 
-  const items: MealPresetItemInput[] = entries.map((entry) => ({
-    foodId: entry.food_id,
-    servings: entry.servings,
-    servingLabel:
-      entry.serving_label ??
-      (entry.foods as FoodRow | null)?.serving_unit ??
-      "serving",
-  }));
+  const items: MealPresetItemInput[] = entries
+    .filter((entry): entry is typeof entry & { food_id: number } =>
+      entry.food_id !== null,
+    )
+    .map((entry) => ({
+      foodId: entry.food_id,
+      servings: entry.servings,
+      servingLabel:
+        entry.serving_label ??
+        (entry.foods as FoodRow | null)?.serving_unit ??
+        "serving",
+    }));
+
+  if (!items.length) {
+    throw new Error(
+      `No ${mealType} items with cached foods logged on ${logDate}.`,
+    );
+  }
 
   return createMealPreset(name, mealType, items);
 }
@@ -1166,6 +1290,31 @@ export async function addPresetToLog(
   const entries: LogEntry[] = [];
 
   for (const item of preset.items) {
+    const foodRow = {
+      id: item.food.id,
+      name: item.food.name,
+      serving_size: item.food.servingSize,
+      serving_unit: item.food.servingUnit,
+      calories: item.food.calories,
+      protein: item.food.protein,
+      carbs: item.food.carbs,
+      fat: item.food.fat,
+      fiber: item.food.fiber,
+      sugar: item.food.sugar,
+      sodium: item.food.sodium,
+      saturated_fat: item.food.saturatedFat,
+      trans_fat: item.food.transFat,
+      cholesterol: item.food.cholesterol,
+      potassium: item.food.potassium,
+      calcium: item.food.calcium,
+      iron: item.food.iron,
+      source: item.food.source,
+      created_at: item.food.createdAt,
+    } satisfies FoodRow;
+    const nutrientSnapshot = nutrientRecordToSnapshot(
+      foodRowToNutrientRecord(foodRow),
+    );
+
     const { data, error } = await supabase
       .from("log_entries")
       .insert({
@@ -1174,6 +1323,7 @@ export async function addPresetToLog(
         meal_type: mealType,
         servings: item.servings,
         serving_label: item.servingLabel,
+        nutrients_snapshot: nutrientSnapshot,
       })
       .select("id")
       .single();
@@ -1185,29 +1335,11 @@ export async function addPresetToLog(
     entries.push(
       buildLogEntry(
         data.id,
-        {
-          id: item.food.id,
-          name: item.food.name,
-          serving_size: item.food.servingSize,
-          serving_unit: item.food.servingUnit,
-          calories: item.food.calories,
-          protein: item.food.protein,
-          carbs: item.food.carbs,
-          fat: item.food.fat,
-          fiber: item.food.fiber,
-          sugar: item.food.sugar,
-          sodium: item.food.sodium,
-          saturated_fat: item.food.saturatedFat,
-          trans_fat: item.food.transFat,
-          cholesterol: item.food.cholesterol,
-          potassium: item.food.potassium,
-          calcium: item.food.calcium,
-          iron: item.food.iron,
-          source: item.food.source,
-          created_at: item.food.createdAt,
-        },
+        foodRowToNutrientRecord(foodRow),
+        item.food.name,
         item.servings,
         item.servingLabel,
+        foodRow.serving_unit,
       ),
     );
   }

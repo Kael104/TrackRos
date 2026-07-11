@@ -97,31 +97,34 @@ export type Database = {
         Row: {
           id: number;
           log_id: number;
-          food_id: number;
+          food_id: number | null;
           meal_type: "breakfast" | "lunch" | "dinner" | "snacks";
           servings: number;
           serving_label: string | null;
           display_name: string | null;
+          nutrients_snapshot: Json | null;
           created_at: string;
         };
         Insert: {
           id?: never;
           log_id: number;
-          food_id: number;
+          food_id?: number | null;
           meal_type: "breakfast" | "lunch" | "dinner" | "snacks";
           servings?: number;
           serving_label?: string | null;
           display_name?: string | null;
+          nutrients_snapshot?: Json | null;
           created_at?: string;
         };
         Update: {
           id?: never;
           log_id?: number;
-          food_id?: number;
+          food_id?: number | null;
           meal_type?: "breakfast" | "lunch" | "dinner" | "snacks";
           servings?: number;
           serving_label?: string | null;
           display_name?: string | null;
+          nutrients_snapshot?: Json | null;
           created_at?: string;
         };
         Relationships: [
